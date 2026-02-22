@@ -1,97 +1,134 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <title>猫咪上门看护服务</title>
+  <meta charset="UTF-8" />
+  <title>猫咪上门看护预约</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background-color: #f7f7f7;
-      padding: 40px;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont;
+      background: #f5f5f5;
+      padding: 20px;
     }
-    .container {
-      max-width: 700px;
-      margin: 0 auto;
-      background: #fff;
-      padding: 30px;
+    .box {
+      max-width: 520px;
+      margin: auto;
+      background: white;
+      padding: 20px;
       border-radius: 8px;
     }
-    h1 { text-align: center; }
-    input, textarea, select {
+    h1 {
+      text-align: center;
+    }
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+    input, textarea, select, button {
       width: 100%;
       padding: 8px;
-      margin-top: 6px;
+      margin-top: 5px;
+      font-size: 14px;
     }
     button {
       margin-top: 20px;
-      width: 100%;
-      padding: 12px;
-      background: #ff9900;
-      color: #fff;
+      background: #4caf50;
+      color: white;
       border: none;
-      border-radius: 6px;
-      font-size: 16px;
       cursor: pointer;
+    }
+    button:hover {
+      background: #43a047;
     }
   </style>
 </head>
 
 <body>
-<div class="container">
-  <h1>🐱 猫咪上门看护预约</h1>
+  <div class="box">
+    <h1>🐱 猫咪上门看护预约</h1>
 
-  <form onsubmit="handleSubmit(event)">
-    <h3>👤 联系人信息</h3>
-    <input id="name" placeholder="姓名" required>
-    <input id="contact" placeholder="微信 / 电话" required>
-    <input id="address" placeholder="上门地址" required>
+    <label>联系方式</label>
+    <input id="contact" placeholder="手机号 / 微信 / Email" />
 
-    <h3>🐱 猫咪信息</h3>
-    <input id="catName" placeholder="猫咪名字" required>
-    <input id="catAge" type="number" placeholder="猫咪年龄">
-    <textarea id="note" placeholder="特殊说明"></textarea>
+    <label>上门地址</label>
+    <input id="address" />
 
-    <h3>📅 上门时间</h3>
-    <input id="date" type="date" required>
-    <select id="time" required>
-      <option value="">请选择时间段</option>
-      <option>上午（9:00 - 12:00）</option>
-      <option>下午（13:00 - 17:00）</option>
-      <option>晚上（18:00 - 20:00）</option>
+    <label>猫咪名字</label>
+    <input id="catName" />
+
+    <label>猫咪年龄</label>
+    <input id="catAge" />
+
+    <label>服务日期</label>
+    <input type="date" id="date" />
+
+    <label>服务时间</label>
+    <select id="time">
+      <option value="上午（9:00 - 12:00）">上午（9:00 - 12:00）</option>
+      <option value="下午（13:00 - 17:00）">下午（13:00 - 17:00）</option>
+      <option value="晚上（18:00 - 21:00）">晚上（18:00 - 21:00）</option>
     </select>
 
-    <button type="submit">提交预约信息</button>
-  </form>
-</div>
+    <label>备注</label>
+    <textarea id="note"></textarea>
 
-<script>
-async function handleSubmit(event) {
-  event.preventDefault();
+    <button onclick="submitAppointment()">提交预约</button>
+  </div>
 
-  const data = {
-    name: name.value,
-    contact: contact.value,
-    address: address.value,
-    catName: catName.value,
-    catAge: catAge.value,
-    note: note.value,
-    date: date.value,
-    time: time.value
-  };
+  <!-- EmailJS SDK（前端专用） -->
+  <script src="https://cdn.emailjs.com/dist/email.min.js"></script>
+  <script>
+    emailjs.init("MMb0p4BWJBxDK-Sgk");
+  </script>
 
-  const response = await fetch("http://localhost:3000/api/appointment", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data)
-  });
+  <script>
+    async function submitAppointment() {
+      const data = {
+        contact: contact.value,
+        address: address.value,
+        catName: catName.value,
+        catAge: catAge.value,
+        date: date.value,
+        time: time.value,
+        note: note.value
+      };
 
-  if (response.ok) {
-    alert("预约提交成功！请耐心等待 1–2 天，客服将与您联系。");
-  } else {
-    alert("提交失败，请稍后再试");
-  }
-}
-</script>
+      console.log("📤 提交的数据：", data);
+
+      // ① 尝试发送邮件（失败也不影响主流程）
+      try {
+        await emailjs.send(
+          "service_b91fibq",
+          "template_63ko5qi",
+          data
+        );
+        console.log("📧 邮件发送成功");
+      } catch (e) {
+        console.warn("⚠️ 邮件发送失败，但继续提交预约", e);
+      }
+
+      // ② 一定提交到后端
+      try {
+        const res = await fetch("/api/appointment", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(data)
+        });
+
+        if (!res.ok) {
+          throw new Error("后端返回失败");
+        }
+
+        alert("预约提交成功，请等待 1–2 天客服联系");
+      } catch (err) {
+        console.error("❌ 后端提交失败", err);
+        alert("服务器错误，请稍后再试");
+      }
+    }
+  </script>
 </body>
 </html>
