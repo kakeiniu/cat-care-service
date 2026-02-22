@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const path = require("path");
 const mongoose = require("mongoose");
+require("dotenv").config();
 
 const app = express();
 
@@ -17,8 +18,7 @@ app.use(express.static(path.join(__dirname, "../")));
 /* ========================
    ② 连接 MongoDB Atlas
 ======================== */
-const MONGO_URI =
-  "mongodb+srv://kakeiniu_DB:Hyron11%23@cluster0.ygeo1ay.mongodb.net/catcare";
+const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://kakeiniu_DB:Hyron11%23@cluster0.ygeo1ay.mongodb.net/catcare";
 
 mongoose
   .connect(MONGO_URI)
@@ -84,6 +84,7 @@ app.get("/test", (req, res) => {
 /* ========================
    ⑥ 启动服务器
 ======================== */
-app.listen(3000, () => {
-  console.log("🚀 服务器已启动：http://localhost:3000");
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`🚀 服务器已启动：http://localhost:${PORT}`);
 });

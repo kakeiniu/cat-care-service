@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: cat-care-service
+    runtime: node
+    plan: free
+    root: server
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: MONGO_URI
+        scope: run
+        value: mongodb+srv://kakeiniu_DB:Hyron11%23@cluster0.ygeo1ay.mongodb.net/catcare
