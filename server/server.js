@@ -21,13 +21,28 @@ app.use(express.static(path.join(__dirname, "../")));
 const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://kakeiniu_DB:Hyron11%23@cluster0.ygeo1ay.mongodb.net/catcare";
 
 mongoose
-  .connect(MONGO_URI)
+  .connect(MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    serverSelectionTimeoutMS: 10000
+  })
   .then(() => {
     console.log("✅ MongoDB 连接成功");
   })
   .catch((err) => {
-    console.error("❌ MongoDB 连接失败：", err.message);
+    console.error("❌ MongoDB 连接失败：", err && err.message ? err.message : err);
   });
+
+const db = mongoose.connection;
+db.on("error", (err) => {
+  console.error("MongoDB 连接错误：", err);
+});
+db.on("connected", () => {
+  console.log("MongoDB 事件：connected");
+});
+db.on("disconnected", () => {
+  console.warn("MongoDB 事件：disconnected");
+});
 
 /* ========================
    ③ 定义预约数据模型
@@ -55,6 +70,11 @@ app.post("/api/appointment", async (req, res) => {
   try {
     console.log("📩 收到新的预约信息：");
     console.log(req.body);
+
+    if (mongoose.connection.readyState !== 1) {
+      console.error("❌ MongoDB 未连接，当前状态：", mongoose.connection.readyState);
+      return res.status(500).json({ success: false, message: "数据库未连接" });
+    }
 
     const appointment = new Appointment(req.body);
     await appointment.save();
