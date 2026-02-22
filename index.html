@@ -4,10 +4,9 @@
   <meta charset="UTF-8" />
   <title>猫咪上门看护预约</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
   <style>
     body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont;
+      font-family: system-ui;
       background: #f5f5f5;
       padding: 20px;
     }
@@ -18,9 +17,6 @@
       padding: 20px;
       border-radius: 8px;
     }
-    h1 {
-      text-align: center;
-    }
     label {
       display: block;
       margin-top: 15px;
@@ -30,7 +26,6 @@
       width: 100%;
       padding: 8px;
       margin-top: 5px;
-      font-size: 14px;
     }
     button {
       margin-top: 20px;
@@ -39,18 +34,15 @@
       border: none;
       cursor: pointer;
     }
-    button:hover {
-      background: #43a047;
-    }
   </style>
 </head>
 
 <body>
   <div class="box">
-    <h1>🐱 猫咪上门看护预约</h1>
+    <h2>🐱 猫咪上门看护预约</h2>
 
     <label>联系方式</label>
-    <input id="contact" placeholder="手机号 / 微信 / Email" />
+    <input id="contact" />
 
     <label>上门地址</label>
     <input id="address" />
@@ -77,56 +69,44 @@
     <button onclick="submitAppointment()">提交预约</button>
   </div>
 
-  <!-- EmailJS SDK（前端专用） -->
-  <script src="https://cdn.emailjs.com/dist/email.min.js"></script>
+  <!-- ✅ 正确的 EmailJS SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+
+  <!-- ✅ 初始化 -->
   <script>
     emailjs.init("MMb0p4BWJBxDK-Sgk");
   </script>
 
+  <!-- ✅ 业务逻辑 -->
   <script>
     async function submitAppointment() {
       const data = {
-        contact: contact.value,
-        address: address.value,
-        catName: catName.value,
-        catAge: catAge.value,
+        contact: contact.value.trim(),
+        address: address.value.trim(),
+        catName: catName.value.trim(),
+        catAge: catAge.value.trim(),
         date: date.value,
         time: time.value,
-        note: note.value
+        note: note.value.trim()
       };
 
-      console.log("📤 提交的数据：", data);
-
-      // ① 尝试发送邮件（失败也不影响主流程）
       try {
         await emailjs.send(
           "service_b91fibq",
           "template_63ko5qi",
           data
         );
-        console.log("📧 邮件发送成功");
-      } catch (e) {
-        console.warn("⚠️ 邮件发送失败，但继续提交预约", e);
-      }
 
-      // ② 一定提交到后端
-      try {
-        const res = await fetch("/api/appointment", {
+        await fetch("/api/appointment", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(data)
         });
 
-        if (!res.ok) {
-          throw new Error("后端返回失败");
-        }
-
         alert("预约提交成功，请等待 1–2 天客服联系");
-      } catch (err) {
-        console.error("❌ 后端提交失败", err);
-        alert("服务器错误，请稍后再试");
+      } catch (e) {
+        console.error("❌ 失败原因：", e);
+        alert("提交失败：" + (e.text || e.message));
       }
     }
   </script>
