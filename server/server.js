@@ -1,31 +1,89 @@
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
+const mongoose = require("mongoose");
 
 const app = express();
 
+/* ========================
+   ① 中间件
+======================== */
 app.use(cors());
 app.use(express.json());
 
-// ⭐ 让服务器直接提供前端页面
+// 让服务器直接提供前端页面
 app.use(express.static(path.join(__dirname, "../")));
 
-// 接收预约
-app.post("/api/appointment", (req, res) => {
-  console.log("📩 收到新的预约信息：");
-  console.log(req.body);
+/* ========================
+   ② 连接 MongoDB Atlas
+======================== */
+const MONGO_URI =
+  "mongodb+srv://kakeiniu_DB:Hyron11%23@cluster0.ygeo1ay.mongodb.net/catcare";
 
-  res.json({
-    success: true,
-    message: "预约提交成功"
+mongoose
+  .connect(MONGO_URI)
+  .then(() => {
+    console.log("✅ MongoDB 连接成功");
+  })
+  .catch((err) => {
+    console.error("❌ MongoDB 连接失败：", err.message);
   });
+
+/* ========================
+   ③ 定义预约数据模型
+======================== */
+const appointmentSchema = new mongoose.Schema({
+  contact: String,
+  address: String,
+  catName: String,
+  catAge: String,
+  date: String,
+  time: String,
+  note: String,
+  createdAt: {
+    type: Date,
+    default: Date.now
+  }
 });
 
-// 测试
+const Appointment = mongoose.model("Appointment", appointmentSchema);
+
+/* ========================
+   ④ 接收预约并保存到数据库
+======================== */
+app.post("/api/appointment", async (req, res) => {
+  try {
+    console.log("📩 收到新的预约信息：");
+    console.log(req.body);
+
+    const appointment = new Appointment(req.body);
+    await appointment.save();
+
+    console.log("✅ 已成功保存到 MongoDB");
+
+    res.json({
+      success: true,
+      message: "预约提交成功"
+    });
+  } catch (err) {
+    console.error("❌ 保存失败：", err.message);
+    res.status(500).json({
+      success: false,
+      message: "服务器保存失败"
+    });
+  }
+});
+
+/* ========================
+   ⑤ 测试接口
+======================== */
 app.get("/test", (req, res) => {
   res.send("OK");
 });
 
+/* ========================
+   ⑥ 启动服务器
+======================== */
 app.listen(3000, () => {
   console.log("🚀 服务器已启动：http://localhost:3000");
-}); 
+});
