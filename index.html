@@ -7,7 +7,7 @@
   <style>
     * { box-sizing: border-box; }
     body {
-      font-family: system-ui;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
       background: #f5f5f5;
       padding: 20px;
     }
@@ -37,6 +37,12 @@
       outline: none;
       border-color: #4caf50;
       box-shadow: 0 0 5px rgba(76, 175, 80, 0.3);
+    }
+    input:disabled, input.past-date {
+      background-color: #e8e8e8 !important;
+      color: #999 !important;
+      cursor: not-allowed !important;
+      opacity: 0.6;
     }
     button {
       width: 100%;
@@ -80,6 +86,7 @@
       border: 1px solid #bee5eb;
     }
     .date-row {
+      display: -webkit-flex;
       display: flex;
       gap: 8px;
       align-items: center;
@@ -98,7 +105,9 @@
     }
     .date-list {
       margin-top: 8px;
+      display: -webkit-flex;
       display: flex;
+      -webkit-flex-wrap: wrap;
       flex-wrap: wrap;
       gap: 8px;
     }
@@ -127,13 +136,17 @@
     }
     .visit-list {
       margin-top: 8px;
+      display: -webkit-flex;
       display: flex;
+      -webkit-flex-direction: column;
       flex-direction: column;
       gap: 8px;
     }
     .visit-row {
+      display: -webkit-flex;
       display: flex;
       gap: 8px;
+      -webkit-align-items: center;
       align-items: center;
       border: 1px solid #e5e5e5;
       border-radius: 8px;
@@ -150,6 +163,8 @@
       margin-top: 0;
     }
   </style>
+
+
 </head>
 
 <body>
@@ -231,7 +246,7 @@
     <div id="message" class="message"></div>
   </div>
 
-  <!-- ✅ 正确的 EmailJS SDK -->
+  <!-- ✅ EmailJS SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 
   <!-- ✅ 初始化 -->
@@ -242,7 +257,7 @@
   <!-- ✅ 业务逻辑 -->
   <script>
     // 级联菜单数据（3县全市 + 东京23区）
-    const areaData = {
+    var areaData = {
       "東京都": {
         type: "ward",
         items: [
@@ -281,20 +296,20 @@
       }
     };
 
-    const TOWN_API = "https://geoapi.heartrails.com/api/json?method=getTowns";
-    const TIME_OPTIONS = [
-      "上午（9:00 - 12:00）",
-      "下午（13:00 - 17:00）",
-      "晚上（18:00 - 21:00）"
+    var TOWN_API = "https://geoapi.heartrails.com/api/json?method=getTowns";
+    var TIME_OPTIONS = [
+      "上午 9:00-12:00",
+      "下午 13:00-17:00",
+      "晚上 18:00-21:00"
     ];
-    let selectedVisits = [];
+    var selectedVisits = [];
 
     // 更新市/区的级联菜单函数
     function updateWard() {
-      const prefecture = document.getElementById("prefecture").value;
-      const citySection = document.getElementById("citySection");
-      const citySelect = document.getElementById("city");
-      const districtSelect = document.getElementById("district");
+      var prefecture = document.getElementById("prefecture").value;
+      var citySection = document.getElementById("citySection");
+      var citySelect = document.getElementById("city");
+      var districtSelect = document.getElementById("district");
       
       // 清空市和区
       citySelect.innerHTML = '';
@@ -307,14 +322,14 @@
         return;
       }
       
-      const prefData = areaData[prefecture];
+      var prefData = areaData[prefecture];
       if (prefData.type === "ward") {
         // 东京特殊处理：直接显示区，隐藏市选择
         citySection.style.display = 'none';
         citySelect.value = '';
         districtSelect.innerHTML = '<option value="">-- 请选择' + prefecture + '的区 --</option>';
-        prefData.items.forEach(ward => {
-          const option = document.createElement("option");
+        prefData.items.forEach(function(ward) {
+          var option = document.createElement("option");
           option.value = prefecture + ward;
           option.textContent = ward;
           districtSelect.appendChild(option);
@@ -324,8 +339,8 @@
         citySection.style.display = 'block';
         citySelect.innerHTML = '<option value="">-- 请选择市 --</option>';
         districtSelect.innerHTML = '<option value="">-- 先选择市 --</option>';
-        prefData.items.forEach(city => {
-          const option = document.createElement("option");
+        prefData.items.forEach(function(city) {
+          var option = document.createElement("option");
           option.value = city;
           option.textContent = city;
           citySelect.appendChild(option);
@@ -334,10 +349,10 @@
     }
 
     // 更新区的级联菜单函数
-    async function updateDistrict() {
-      const prefecture = document.getElementById("prefecture").value;
-      const city = document.getElementById("city").value;
-      const districtSelect = document.getElementById("district");
+    function updateDistrict() {
+      var prefecture = document.getElementById("prefecture").value;
+      var city = document.getElementById("city").value;
+      var districtSelect = document.getElementById("district");
       
       districtSelect.innerHTML = '';
       
@@ -348,12 +363,17 @@
       
       districtSelect.innerHTML = '<option value="">-- 正在加载区/町域... --</option>';
 
-      try {
-        const url = `${TOWN_API}&prefecture=${encodeURIComponent(prefecture)}&city=${encodeURIComponent(city)}`;
-        const res = await fetch(url);
-        const json = await res.json();
-        const locations = json?.response?.location || [];
-        const towns = [...new Set(locations.map(item => item.town).filter(Boolean))];
+      var url = TOWN_API + "&prefecture=" + encodeURIComponent(prefecture) + "&city=" + encodeURIComponent(city);
+      
+      var success = function(json) {
+        var locations = (json && json.response && json.response.location) || [];
+        var townSet = new Set();
+        for (var i = 0; i < locations.length; i++) {
+          if (locations[i].town) {
+            townSet.add(locations[i].town);
+          }
+        }
+        var towns = Array.prototype.slice.call(townSet);
 
         districtSelect.innerHTML = '';
         if (towns.length === 0) {
@@ -363,26 +383,54 @@
         }
 
         districtSelect.innerHTML = '<option value="">-- 请选择' + city + '的区/町域 --</option>';
-        towns.forEach(town => {
-          const option = document.createElement("option");
+        towns.forEach(function(town) {
+          var option = document.createElement("option");
           option.value = town;
           option.textContent = town;
           districtSelect.appendChild(option);
         });
-      } catch (error) {
+      };
+      
+      var error = function() {
         districtSelect.innerHTML = '<option value="' + city + '">' + city + '（全域）</option>';
         districtSelect.value = city + '（全域）';
+      };
+
+      if (typeof fetch !== 'undefined') {
+        fetch(url)
+          .then(function(res) { return res.json(); })
+          .then(success)
+          .catch(error);
+      } else {
+        var xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function() {
+          if (xhr.readyState === 4) {
+            if (xhr.status === 200) {
+              try {
+                var json = JSON.parse(xhr.responseText);
+                success(json);
+              } catch(e) {
+                error();
+              }
+            } else {
+              error();
+            }
+          }
+        };
+        xhr.onerror = error;
+        xhr.open("GET", url);
+        xhr.send();
       }
     }
 
     // 显示消息
     function showMessage(text, type) {
-      const msg = document.getElementById("message");
+      var msg = document.getElementById("message");
       msg.textContent = text;
-      msg.className = `message ${type}`;
+      msg.className = "message " + type;
       msg.style.display = "block";
       if (type === "success") {
-        setTimeout(() => {
+        setTimeout(function() {
           msg.style.display = "none";
           clearForm();
         }, 3000);
@@ -390,17 +438,19 @@
     }
 
     function getTodayISO() {
-      const today = new Date();
-      const yyyy = today.getFullYear();
-      const mm = String(today.getMonth() + 1).padStart(2, "0");
-      const dd = String(today.getDate()).padStart(2, "0");
-      return `${yyyy}-${mm}-${dd}`;
+      var today = new Date();
+      var yyyy = today.getFullYear();
+      var m = today.getMonth() + 1;
+      var mm = (m < 10 ? "0" : "") + m;
+      var d = today.getDate();
+      var dd = (d < 10 ? "0" : "") + d;
+      return yyyy + "-" + mm + "-" + dd;
     }
 
     function onBookingModeChange() {
-      const mode = document.getElementById("bookingMode").value;
-      const separateSection = document.getElementById("separateDateSection");
-      const rangeSection = document.getElementById("rangeDateSection");
+      var mode = document.getElementById("bookingMode").value;
+      var separateSection = document.getElementById("separateDateSection");
+      var rangeSection = document.getElementById("rangeDateSection");
       if (mode === "range") {
         separateSection.style.display = "none";
         rangeSection.style.display = "block";
@@ -411,39 +461,55 @@
     }
 
     function renderVisitList() {
-      const visitList = document.getElementById("visitList");
+      var visitList = document.getElementById("visitList");
       visitList.innerHTML = "";
 
-      selectedVisits.forEach(visit => {
-        const row = document.createElement("div");
+      // 如果没有访问列表，不显示任何内容
+      if (!selectedVisits || selectedVisits.length === 0) {
+        return;
+      }
+
+      selectedVisits.forEach(function(visit) {
+        var row = document.createElement("div");
         row.className = "visit-row";
 
-        const dateLabel = document.createElement("span");
+        var dateLabel = document.createElement("span");
         dateLabel.className = "visit-date";
         dateLabel.textContent = visit.date;
 
-        const timeSelect = document.createElement("select");
+        var timeSelect = document.createElement("select");
         timeSelect.className = "visit-time";
         timeSelect.innerHTML = '<option value="">-- 请选择上门时间 --</option>';
-        TIME_OPTIONS.forEach(timeText => {
-          const option = document.createElement("option");
-          option.value = timeText;
-          option.textContent = timeText;
-          if (visit.time === timeText) {
-            option.selected = true;
-          }
-          timeSelect.appendChild(option);
-        });
-        timeSelect.onchange = (event) => {
-          updateVisitTime(visit.date, event.target.value);
-        };
+        
+        // 确保 TIME_OPTIONS 被正确使用
+        if (TIME_OPTIONS && TIME_OPTIONS.length > 0) {
+          TIME_OPTIONS.forEach(function(timeText) {
+            var option = document.createElement("option");
+            option.value = timeText;
+            option.textContent = timeText;
+            if (visit.time === timeText) {
+              option.selected = true;
+            }
+            timeSelect.appendChild(option);
+          });
+        }
+        
+        timeSelect.onchange = (function(currentVisitDate) {
+          return function(event) {
+            updateVisitTime(currentVisitDate, event.target.value);
+          };
+        })(visit.date);
 
-        const removeBtn = document.createElement("button");
+        var removeBtn = document.createElement("button");
         removeBtn.type = "button";
         removeBtn.className = "small-btn";
         removeBtn.style.background = "#d9534f";
         removeBtn.textContent = "删除";
-        removeBtn.onclick = () => removeVisitDate(visit.date);
+        removeBtn.onclick = (function(currentVisitDate) {
+          return function() {
+            removeVisitDate(currentVisitDate);
+          };
+        })(visit.date);
 
         row.appendChild(dateLabel);
         row.appendChild(timeSelect);
@@ -453,38 +519,50 @@
     }
 
     function updateVisitTime(dateValue, timeValue) {
-      selectedVisits = selectedVisits.map(visit =>
-        visit.date === dateValue ? { ...visit, time: timeValue } : visit
-      );
+      selectedVisits = selectedVisits.map(function(visit) {
+        if (visit.date === dateValue) {
+          return Object.assign({}, visit, { time: timeValue });
+        }
+        return visit;
+      });
     }
 
     function addVisitDate(dateValue) {
-      if (selectedVisits.some(visit => visit.date === dateValue)) {
+      if (selectedVisits.some(function(visit) { return visit.date === dateValue; })) {
         showMessage("❌ 该日期已添加", "error");
         return false;
       }
 
-      const todayISO = getTodayISO();
+      var todayISO = getTodayISO();
       if (dateValue < todayISO) {
         showMessage("❌ 服务日期不能是过去的日期", "error");
         return false;
       }
 
       selectedVisits.push({ date: dateValue, time: "" });
-      selectedVisits.sort((a, b) => a.date.localeCompare(b.date));
+      selectedVisits.sort(function(a, b) { return a.date.localeCompare(b.date); });
       renderVisitList();
       return true;
     }
 
     function addSingleDate() {
-      const dateInput = document.getElementById("date");
-      const dateValue = dateInput.value;
+      var dateInput = document.getElementById("date");
+      var dateValue = dateInput.value;
       if (!dateValue) {
         showMessage("❌ 请先选择一个日期", "error");
         return;
       }
 
-      const added = addVisitDate(dateValue);
+      var todayISO = getTodayISO();
+      if (dateValue < todayISO) {
+        dateInput.classList.add("past-date");
+        showMessage("❌ 服务日期不能是过去的日期", "error");
+        dateInput.value = "";
+        dateInput.classList.remove("past-date");
+        return;
+      }
+
+      var added = addVisitDate(dateValue);
       if (!added) {
         return;
       }
@@ -494,11 +572,28 @@
     }
 
     function addDateRange() {
-      const startDate = document.getElementById("startDate").value;
-      const endDate = document.getElementById("endDate").value;
+      var startDate = document.getElementById("startDate").value;
+      var endDate = document.getElementById("endDate").value;
 
       if (!startDate || !endDate) {
         showMessage("❌ 请先选择开始和结束日期", "error");
+        return;
+      }
+
+      var todayISO = getTodayISO();
+      if (startDate < todayISO) {
+        document.getElementById("startDate").classList.add("past-date");
+        showMessage("❌ 开始日期不能是过去的日期", "error");
+        document.getElementById("startDate").value = "";
+        document.getElementById("startDate").classList.remove("past-date");
+        return;
+      }
+
+      if (endDate < todayISO) {
+        document.getElementById("endDate").classList.add("past-date");
+        showMessage("❌ 结束日期不能是过去的日期", "error");
+        document.getElementById("endDate").value = "";
+        document.getElementById("endDate").classList.remove("past-date");
         return;
       }
 
@@ -508,25 +603,31 @@
       }
 
       // 智能区间更新：重叠日期保留原时间，超出范围自动移除，新日期自动补充
-      const nextDateSet = new Set();
-      let current = new Date(startDate + "T00:00:00");
-      const end = new Date(endDate + "T00:00:00");
+      var nextDateArray = [];
+      var startParts = startDate.split("-");
+      var endParts = endDate.split("-");
+      var current = new Date(parseInt(startParts[0]), parseInt(startParts[1]) - 1, parseInt(startParts[2]));
+      var end = new Date(parseInt(endParts[0]), parseInt(endParts[1]) - 1, parseInt(endParts[2]));
 
       while (current <= end) {
-        const yyyy = current.getFullYear();
-        const mm = String(current.getMonth() + 1).padStart(2, "0");
-        const dd = String(current.getDate()).padStart(2, "0");
-        nextDateSet.add(`${yyyy}-${mm}-${dd}`);
+        var yyyy = current.getFullYear();
+        var m = current.getMonth() + 1;
+        var mm = (m < 10 ? "0" : "") + m;
+        var d = current.getDate();
+        var dd = (d < 10 ? "0" : "") + d;
+        nextDateArray.push(yyyy + "-" + mm + "-" + dd);
         current.setDate(current.getDate() + 1);
       }
 
-      const visitMap = new Map(selectedVisits.map(visit => [visit.date, visit]));
-      const nextVisits = [];
-      let addedCount = 0;
-
-      Array.from(nextDateSet).sort().forEach(dateValue => {
-        if (visitMap.has(dateValue)) {
-          nextVisits.push(visitMap.get(dateValue));
+      var visitMap = {};
+      selectedVisits.forEach(function(visit) {
+        visitMap[visit.date] = visit;
+      });
+      var nextVisits = [];
+      var addedCount = 0;
+      nextDateArray.forEach(function(dateValue) {
+        if (visitMap.hasOwnProperty(dateValue)) {
+          nextVisits.push(visitMap[dateValue]);
         } else {
           nextVisits.push({ date: dateValue, time: "" });
           addedCount += 1;
@@ -537,25 +638,32 @@
       renderVisitList();
 
       if (addedCount > 0) {
-        showMessage(`✅ 区间已更新，新增 ${addedCount} 个日期，请补充时间`, "loading");
+        showMessage("✅ 已添加 " + addedCount + " 个日期（" + startDate + " 至 " + endDate + "），请为每个日期选择时间", "loading");
       } else {
-        showMessage("✅ 区间已更新，已保留重叠日期的时间设置", "loading");
+        showMessage("✅ 区间已更新（" + startDate + " 至 " + endDate + "），已保留重叠日期的时间设置", "loading");
       }
     }
 
     function removeVisitDate(dateValue) {
-      selectedVisits = selectedVisits.filter(visit => visit.date !== dateValue);
+      var newVisits = [];
+      for (var i = 0; i < selectedVisits.length; i++) {
+        if (selectedVisits[i].date !== dateValue) {
+          newVisits.push(selectedVisits[i]);
+        }
+      }
+      selectedVisits = newVisits;
       renderVisitList();
     }
 
     // 设置日期最小值（过去日期不可选）
     function setDateMin() {
-      const dateInput = document.getElementById("date");
-      const startDateInput = document.getElementById("startDate");
-      const endDateInput = document.getElementById("endDate");
-      dateInput.min = getTodayISO();
-      startDateInput.min = getTodayISO();
-      endDateInput.min = getTodayISO();
+      var dateInput = document.getElementById("date");
+      var startDateInput = document.getElementById("startDate");
+      var endDateInput = document.getElementById("endDate");
+      var todayISO = getTodayISO();
+      dateInput.min = todayISO;
+      startDateInput.min = todayISO;
+      endDateInput.min = todayISO;
     }
 
     // 清空表单
@@ -582,14 +690,14 @@
 
     // 验证表单
     function validateForm() {
-      const contactType = document.getElementById("contactType").value;
-      const contact = document.getElementById("contact").value.trim();
-      const prefecture = document.getElementById("prefecture").value;
-      const city = document.getElementById("city").value;
-      const district = document.getElementById("district").value;
-      const addressDetail = document.getElementById("addressDetail").value.trim();
-      const catName = document.getElementById("catName").value.trim();
-      const catAge = document.getElementById("catAge").value.trim();
+      var contactType = document.getElementById("contactType").value;
+      var contact = (document.getElementById("contact").value || "").trim();
+      var prefecture = document.getElementById("prefecture").value;
+      var city = document.getElementById("city").value;
+      var district = document.getElementById("district").value;
+      var addressDetail = (document.getElementById("addressDetail").value || "").trim();
+      var catName = (document.getElementById("catName").value || "").trim();
+      var catAge = (document.getElementById("catAge").value || "").trim();
 
       // 必填检查
       if (!contactType) return "❌ 联系方式类型不能为空";
@@ -602,9 +710,10 @@
       if (!catAge) return "❌ 猫咪年龄不能为空";
       if (selectedVisits.length === 0) return "❌ 请至少添加一个服务日期";
 
-      for (const visit of selectedVisits) {
+      for (var i = 0; i < selectedVisits.length; i++) {
+        var visit = selectedVisits[i];
         if (!visit.time) {
-          return `❌ 请为日期 ${visit.date} 选择上门时间`;
+          return "❌ 请为日期 " + visit.date + " 选择上门时间";
         }
       }
 
@@ -613,7 +722,7 @@
         // 日本电话：
         // 手机：090-1234-5678 或 09012345678（11位）
         // 固定电话：0456-12-3456 或 045612345（10位）
-        const phoneDigits = contact.replace(/-/g, "");
+        var phoneDigits = contact.replace(/-/g, "");
         if (!/^0\d{9,10}$/.test(phoneDigits)) {
           return "❌ 电话格式错误，请输入手机（090-1234-5678）或固定电话（0456-12-3456）";
         }
@@ -630,8 +739,9 @@
       }
 
       // 日期检查（不能是过去的日期）
-      const todayISO = getTodayISO();
-      for (const visit of selectedVisits) {
+      var todayISO = getTodayISO();
+      for (var i = 0; i < selectedVisits.length; i++) {
+        var visit = selectedVisits[i];
         if (visit.date < todayISO) {
           return "❌ 服务日期不能是过去的日期";
         }
@@ -640,83 +750,178 @@
       return null; // 验证通过
     }
 
-    async function submitAppointment() {
+    function submitAppointment() {
       // 验证表单
-      const validationError = validateForm();
+      var validationError = validateForm();
       if (validationError) {
         showMessage(validationError, "error");
         return;
       }
 
-      const submit_btn = document.getElementById("submitBtn");
-      const prefecture = document.getElementById("prefecture").value;
-      const city = document.getElementById("city").value;
-      const district = document.getElementById("district").value;
-      const addressDetail = document.getElementById("addressDetail").value.trim();
+      var submit_btn = document.getElementById("submitBtn");
+      var prefecture = document.getElementById("prefecture").value;
+      var city = document.getElementById("city").value;
+      var district = document.getElementById("district").value;
+      var addressDetail = (document.getElementById("addressDetail").value || "").trim();
       
       // 根据都道府県类型组合地址
-      let address = "";
-      const prefData = areaData[prefecture];
+      var address = "";
+      var prefData = areaData[prefecture];
       if (prefData.type === "ward") {
         address = prefecture + district + " " + addressDetail;
       } else {
         address = prefecture + city + district + " " + addressDetail;
       }
       
-      const data = {
+      var datesList = [];
+      var timeList = [];
+      for (var i = 0; i < selectedVisits.length; i++) {
+        datesList.push(selectedVisits[i].date);
+        timeList.push(selectedVisits[i].date + " " + selectedVisits[i].time);
+      }
+      
+      var data = {
         contactType: document.getElementById("contactType").value,
-        contact: document.getElementById("contact").value.trim(),
+        contact: (document.getElementById("contact").value || "").trim(),
         address: address,
-        catName: document.getElementById("catName").value.trim(),
-        catAge: document.getElementById("catAge").value.trim(),
+        catName: (document.getElementById("catName").value || "").trim(),
+        catAge: (document.getElementById("catAge").value || "").trim(),
         date: selectedVisits[0].date,
-        dates: selectedVisits.map(visit => visit.date),
+        dates: datesList,
         visits: selectedVisits,
-        time: selectedVisits.map(visit => `${visit.date} ${visit.time}`).join("；"),
-        note: document.getElementById("note").value.trim()
+        time: timeList.join("；"),
+        note: (document.getElementById("note").value || "").trim()
       };
 
       // 禁用提交按钮，显示加载状态
       submit_btn.disabled = true;
       showMessage("⏳ 提交中，请稍候...", "loading");
 
-      try {
-        // 发送到后端
-        const res = await fetch("/api/appointment", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data)
-        });
-
-        const result = await res.json();
-
-        if (!res.ok) {
-          throw new Error(result.message || "提交失败");
+      var makeRequest = function() {
+        if (typeof fetch !== 'undefined') {
+          fetch("/api/appointment", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data)
+          })
+          .then(function(res) {
+            if (!res.ok) {
+              return res.json().then(function(json) {
+                throw new Error(json.message || "提交失败");
+              });
+            }
+            return res.json();
+          })
+          .then(function(result) {
+            alert("您已提交，请等待工作人员联系");
+            showMessage("✅ " + result.message + "，请等待工作人员联系", "success");
+            submit_btn.disabled = false;
+            
+            // 尝试发送 EmailJS（非必要）
+            try {
+              if (typeof emailjs !== 'undefined' && emailjs.send) {
+                emailjs.send("service_b91fibq", "template_63ko5qi", data).catch(function(err) {
+                  console.warn("邮件发送失败（不影响数据库保存）", err);
+                });
+              }
+            } catch(emailErr) {
+              console.warn("邮件发送失败（不影响数据库保存）", emailErr);
+            }
+          })
+          .catch(function(e) {
+            console.error("❌ 错误：", e);
+            var errMsg = e && e.message ? e.message : "提交失败，请重试";
+            showMessage("❌ " + errMsg, "error");
+            submit_btn.disabled = false;
+          });
+        } else {
+          // IE9+: XMLHttpRequest
+          var xhr = new XMLHttpRequest();
+          xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4) {
+              submit_btn.disabled = false;
+              try {
+                var result = JSON.parse(xhr.responseText);
+                if (xhr.status === 200 || xhr.status === 201) {
+                  alert("您已提交，请等待工作人员联系");
+                  showMessage("✅ " + result.message + "，请等待工作人员联系", "success");
+                  
+                  // 尝试发送 EmailJS（非必要）
+                  try {
+                    if (typeof emailjs !== 'undefined' && emailjs.send) {
+                      emailjs.send("service_b91fibq", "template_63ko5qi", data).catch(function(err) {
+                        console.warn("邮件发送失败（不影响数据库保存）", err);
+                      });
+                    }
+                  } catch(emailErr) {
+                    console.warn("邮件发送失败（不影响数据库保存）", emailErr);
+                  }
+                } else {
+                  var errMsg = result.message || "提交失败";
+                  showMessage("❌ " + errMsg, "error");
+                }
+              } catch(e) {
+                showMessage("❌ 网络错误，请重试", "error");
+              }
+            }
+          };
+          xhr.onerror = function() {
+            submit_btn.disabled = false;
+            showMessage("❌ 网络错误，请检查网络连接", "error");
+          };
+          xhr.ontimeout = function() {
+            submit_btn.disabled = false;
+            showMessage("❌ 请求超时，请重试", "error");
+          };
+          xhr.open("POST", "/api/appointment");
+          xhr.setRequestHeader("Content-Type", "application/json");
+          xhr.timeout = 30000;
+          xhr.send(JSON.stringify(data));
         }
-
-        // 同时发送 EmailJS（非必要）
-        try {
-          await emailjs.send(
-            "service_b91fibq",
-            "template_63ko5qi",
-            data
-          );
-        } catch (emailErr) {
-          console.warn("邮件发送失败（不影响数据库保存）：", emailErr);
-        }
-
-        alert("您已提交，请等待工作人员联系");
-        showMessage("✅ " + result.message + "，请等待工作人员联系", "success");
-      } catch (e) {
-        console.error("❌ 错误：", e);
-        showMessage("❌ " + (e.message || "提交失败，请重试"), "error");
-      } finally {
-        submit_btn.disabled = false;
-      }
+      };
+      
+      makeRequest();
     }
 
     setDateMin();
     onBookingModeChange();
+
+    // 实时监听日期输入框，禁止过去日期
+    document.getElementById("date").addEventListener("change", function() {
+      var todayISO = getTodayISO();
+      if (this.value && this.value < todayISO) {
+        this.classList.add("past-date");
+        showMessage("❌ 服务日期不能是过去的日期，请重新选择", "error");
+        this.value = "";
+        this.classList.remove("past-date");
+      } else {
+        this.classList.remove("past-date");
+      }
+    }, false);
+
+    document.getElementById("startDate").addEventListener("change", function() {
+      var todayISO = getTodayISO();
+      if (this.value && this.value < todayISO) {
+        this.classList.add("past-date");
+        showMessage("❌ 开始日期不能是过去的日期，请重新选择", "error");
+        this.value = "";
+        this.classList.remove("past-date");
+      } else {
+        this.classList.remove("past-date");
+      }
+    }, false);
+
+    document.getElementById("endDate").addEventListener("change", function() {
+      var todayISO = getTodayISO();
+      if (this.value && this.value < todayISO) {
+        this.classList.add("past-date");
+        showMessage("❌ 结束日期不能是过去的日期，请重新选择", "error");
+        this.value = "";
+        this.classList.remove("past-date");
+      } else {
+        this.classList.remove("past-date");
+      }
+    }, false);
   </script>
 </body>
 </html>
