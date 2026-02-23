@@ -5,6 +5,7 @@
   <title>猫咪上门看护预约</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
+    * { box-sizing: border-box; }
     body {
       font-family: system-ui;
       background: #f5f5f5;
@@ -16,23 +17,67 @@
       background: white;
       padding: 20px;
       border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
     label {
       display: block;
       margin-top: 15px;
       font-weight: bold;
     }
-    input, textarea, select, button {
+    .required { color: red; }
+    input, textarea, select {
       width: 100%;
       padding: 8px;
       margin-top: 5px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    input:focus, textarea:focus, select:focus {
+      outline: none;
+      border-color: #4caf50;
+      box-shadow: 0 0 5px rgba(76, 175, 80, 0.3);
     }
     button {
+      width: 100%;
       margin-top: 20px;
+      padding: 10px;
       background: #4caf50;
       color: white;
       border: none;
+      border-radius: 4px;
       cursor: pointer;
+      font-size: 16px;
+      font-weight: bold;
+      transition: background 0.3s;
+    }
+    button:hover:not(:disabled) {
+      background: #45a049;
+    }
+    button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    .message {
+      margin-top: 15px;
+      padding: 12px;
+      border-radius: 4px;
+      display: none;
+    }
+    .success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    .error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+    .loading {
+      background: #d1ecf1;
+      color: #0c5460;
+      border: 1px solid #bee5eb;
     }
   </style>
 </head>
@@ -41,32 +86,35 @@
   <div class="box">
     <h2>🐱 猫咪上门看护预约</h2>
 
-    <label>联系方式</label>
-    <input id="contact" />
+    <label>联系方式 <span class="required">*</span></label>
+    <input id="contact" placeholder="请输入电话号码或微信" />
 
-    <label>上门地址</label>
-    <input id="address" />
+    <label>上门地址 <span class="required">*</span></label>
+    <input id="address" placeholder="请输入详细地址" />
 
-    <label>猫咪名字</label>
-    <input id="catName" />
+    <label>猫咪名字 <span class="required">*</span></label>
+    <input id="catName" placeholder="请输入猫咪名字" />
 
-    <label>猫咪年龄</label>
-    <input id="catAge" />
+    <label>猫咪年龄 <span class="required">*</span></label>
+    <input id="catAge" placeholder="例如：3岁" />
 
-    <label>服务日期</label>
+    <label>服务日期 <span class="required">*</span></label>
     <input type="date" id="date" />
 
-    <label>服务时间</label>
+    <label>服务时间 <span class="required">*</span></label>
     <select id="time">
+      <option value="">-- 请选择 --</option>
       <option value="上午（9:00 - 12:00）">上午（9:00 - 12:00）</option>
       <option value="下午（13:00 - 17:00）">下午（13:00 - 17:00）</option>
       <option value="晚上（18:00 - 21:00）">晚上（18:00 - 21:00）</option>
     </select>
 
-    <label>备注</label>
-    <textarea id="note"></textarea>
+    <label>备注（可选）</label>
+    <textarea id="note" placeholder="例如：猫咪性格、特殊需求等"></textarea>
 
-    <button onclick="submitAppointment()">提交预约</button>
+    <button id="submitBtn" onclick="submitAppointment()">提交预约</button>
+
+    <div id="message" class="message"></div>
   </div>
 
   <!-- ✅ 正确的 EmailJS SDK -->
@@ -79,34 +127,114 @@
 
   <!-- ✅ 业务逻辑 -->
   <script>
+    // 显示消息
+    function showMessage(text, type) {
+      const msg = document.getElementById("message");
+      msg.textContent = text;
+      msg.className = `message ${type}`;
+      msg.style.display = "block";
+      if (type === "success") {
+        setTimeout(() => {
+          msg.style.display = "none";
+          clearForm();
+        }, 3000);
+      }
+    }
+
+    // 清空表单
+    function clearForm() {
+      document.getElementById("contact").value = "";
+      document.getElementById("address").value = "";
+      document.getElementById("catName").value = "";
+      document.getElementById("catAge").value = "";
+      document.getElementById("date").value = "";
+      document.getElementById("time").value = "";
+      document.getElementById("note").value = "";
+    }
+
+    // 验证表单
+    function validateForm() {
+      const contact = document.getElementById("contact").value.trim();
+      const address = document.getElementById("address").value.trim();
+      const catName = document.getElementById("catName").value.trim();
+      const catAge = document.getElementById("catAge").value.trim();
+      const date = document.getElementById("date").value;
+      const time = document.getElementById("time").value;
+
+      // 必填检查
+      if (!contact) return "❌ 联系方式不能为空";
+      if (!address) return "❌ 上门地址不能为空";
+      if (!catName) return "❌ 猫咪名字不能为空";
+      if (!catAge) return "❌ 猫咪年龄不能为空";
+      if (!date) return "❌ 服务日期不能为空";
+      if (!time) return "❌ 服务时间不能为空";
+
+      // 联系方式长度检查（电话至少7位）
+      if (contact.length < 7) return "❌ 联系方式过短，请确认是否完整";
+
+      // 日期检查（不能是过去的日期）
+      const selectedDate = new Date(date);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (selectedDate < today) return "❌ 服务日期不能是过去的日期";
+
+      return null; // 验证通过
+    }
+
     async function submitAppointment() {
+      // 验证表单
+      const validationError = validateForm();
+      if (validationError) {
+        showMessage(validationError, "error");
+        return;
+      }
+
+      const submit_btn = document.getElementById("submitBtn");
       const data = {
-        contact: contact.value.trim(),
-        address: address.value.trim(),
-        catName: catName.value.trim(),
-        catAge: catAge.value.trim(),
-        date: date.value,
-        time: time.value,
-        note: note.value.trim()
+        contact: document.getElementById("contact").value.trim(),
+        address: document.getElementById("address").value.trim(),
+        catName: document.getElementById("catName").value.trim(),
+        catAge: document.getElementById("catAge").value.trim(),
+        date: document.getElementById("date").value,
+        time: document.getElementById("time").value,
+        note: document.getElementById("note").value.trim()
       };
 
-      try {
-        await emailjs.send(
-          "service_b91fibq",
-          "template_63ko5qi",
-          data
-        );
+      // 禁用提交按钮，显示加载状态
+      submit_btn.disabled = true;
+      showMessage("⏳ 提交中，请稍候...", "loading");
 
-        await fetch("/api/appointment", {
+      try {
+        // 发送到后端
+        const res = await fetch("/api/appointment", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(data)
         });
 
-        alert("预约提交成功，请等待 1–2 天客服联系");
+        const result = await res.json();
+
+        if (!res.ok) {
+          throw new Error(result.message || "提交失败");
+        }
+
+        // 同时发送 EmailJS（非必要）
+        try {
+          await emailjs.send(
+            "service_b91fibq",
+            "template_63ko5qi",
+            data
+          );
+        } catch (emailErr) {
+          console.warn("邮件发送失败（不影响数据库保存）：", emailErr);
+        }
+
+        showMessage("✅ " + result.message + "，请等待 1–2 天客服联系", "success");
       } catch (e) {
-        console.error("❌ 失败原因：", e);
-        alert("提交失败：" + (e.text || e.message));
+        console.error("❌ 错误：", e);
+        showMessage("❌ " + (e.message || "提交失败，请重试"), "error");
+      } finally {
+        submit_btn.disabled = false;
       }
     }
   </script>
