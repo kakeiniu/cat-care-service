@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>客户提交列表</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      background: #f5f5f5;
+      color: #222;
+    }
+    .container {
+      max-width: 980px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      padding: 20px;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 22px;
+    }
+    .desc {
+      margin: 0 0 16px;
+      color: #666;
+      font-size: 14px;
+    }
+    .toolbar {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    button {
+      border: none;
+      border-radius: 6px;
+      background: #4caf50;
+      color: #fff;
+      padding: 8px 14px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    button:hover { background: #45a049; }
+    #markAllReadBtn {
+      background: #f1f1f1;
+      color: #666;
+      border: 1px solid #d9d9d9;
+    }
+    #markAllReadBtn:hover {
+      background: #e7e7e7;
+    }
+    #markAllUnreadBtn {
+      background: #fff2df;
+      color: #9a5b00;
+      border: 1px solid #f3c780;
+    }
+    #markAllUnreadBtn:hover {
+      background: #ffe8c7;
+    }
+    .status {
+      font-size: 13px;
+      color: #555;
+    }
+    .list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .card {
+      border: 1px solid #e7e7e7;
+      border-radius: 8px;
+      padding: 12px;
+      background: #fafafa;
+    }
+    .card.important {
+      border-left: 4px solid #e67e22;
+    }
+    .card.unread {
+      background: #fff7e6;
+      border-color: #ffd37a;
+    }
+    .card.read {
+      background: #fafafa;
+      border-color: #e7e7e7;
+    }
+    .summary {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      justify-content: space-between;
+      cursor: pointer;
+    }
+    .summary-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+      min-width: 0;
+    }
+    .status-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      display: inline-block;
+      flex: 0 0 auto;
+    }
+    .status-dot.unread {
+      background: #f39c12;
+    }
+    .status-dot.read {
+      background: #b7b7b7;
+    }
+    .status-text {
+      font-size: 12px;
+      color: #666;
+      white-space: nowrap;
+    }
+    .actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .important-btn {
+      width: auto;
+      margin: 0;
+      padding: 5px 8px;
+      font-size: 12px;
+      background: #fff2df;
+      color: #9a5b00;
+    }
+    .important-btn.active {
+      background: #e67e22;
+      color: #fff;
+    }
+    .summary-text {
+      flex: 1;
+      min-width: 0;
+      font-size: 14px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .pagination {
+      margin-top: 14px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .page-btn {
+      width: auto;
+      margin: 0;
+      padding: 6px 10px;
+      font-size: 13px;
+      background: #e9f5ea;
+      color: #2f6f33;
+    }
+    .page-btn:hover {
+      background: #d8edd9;
+    }
+    .page-btn.active {
+      background: #4caf50;
+      color: #fff;
+    }
+    .row {
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      gap: 8px;
+      margin-top: 6px;
+      font-size: 14px;
+    }
+    .row .label {
+      color: #666;
+      font-weight: 600;
+    }
+    .visit-item {
+      margin: 3px 0;
+    }
+    .empty, .error {
+      border-radius: 8px;
+      padding: 12px;
+      font-size: 14px;
+    }
+    .empty {
+      background: #eef7ef;
+      color: #2b6f2f;
+    }
+    .error {
+      background: #fdecec;
+      color: #a32626;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>客户提交内容列表</h1>
+    <p class="desc">显示最近提交的预约信息（按提交时间倒序）</p>
+
+    <div class="toolbar">
+      <button id="refreshBtn" type="button">刷新列表</button>
+      <button id="markAllReadBtn" type="button">一键已读</button>
+      <button id="markAllUnreadBtn" type="button">一键未读</button>
+      <span id="status" class="status">准备加载...</span>
+    </div>
+
+    <div id="message"></div>
+    <div id="list" class="list"></div>
+    <div id="pagination" class="pagination"></div>
+  </div>
+
+  <script>
+    var PAGE_SIZE = 10;
+    var allItems = [];
+    var currentPage = 1;
+
+    function escapeHtml(text) {
+      var value = text == null ? "" : String(text);
+      return value
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/\"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function formatDateTime(value) {
+      if (!value) return "-";
+      var date = new Date(value);
+      if (isNaN(date.getTime())) return value;
+      return date.toLocaleString("zh-CN", { hour12: false });
+    }
+
+    function getFirstVisitText(visits) {
+      if (!visits || !visits.length) return "无上门安排";
+      var first = visits[0] || {};
+      var date = first.date || "-";
+      var time = first.time || "-";
+      return date + " / " + time;
+    }
+
+    function renderList(items) {
+      var list = document.getElementById("list");
+      var message = document.getElementById("message");
+      message.innerHTML = "";
+      list.innerHTML = "";
+
+      if (!items || items.length === 0) {
+        message.innerHTML = '<div class="empty">暂无客户提交内容</div>';
+        return;
+      }
+
+      for (var i = 0; i < items.length; i++) {
+        var item = items[i] || {};
+        var card = document.createElement("div");
+        var isRead = item.isRead === true;
+        var isImportant = item.isImportant === true;
+        card.className = "card " + (isRead ? "read" : "unread") + (isImportant ? " important" : "");
+        var appointmentId = item._id || "";
+
+        var summaryText = [
+          formatDateTime(item.createdAt),
+          (item.contactType || '-') + ' / ' + (item.contact || '-'),
+          (item.catName || '-') + ' / ' + (item.catAge || '-'),
+          getFirstVisitText(item.visits)
+        ].join(" ｜ ");
+
+        card.innerHTML = '' +
+          '<div class="summary" data-id="' + escapeHtml(appointmentId) + '">' +
+            '<div class="summary-left">' +
+              '<span class="status-dot ' + (isRead ? 'read' : 'unread') + '"></span>' +
+              '<div class="summary-text">' + escapeHtml(summaryText) + '</div>' +
+            '</div>' +
+            '<div class="actions">' +
+              '<button type="button" class="important-btn ' + (isImportant ? 'active' : '') + '">' + (isImportant ? '取消重要' : '标记重要') + '</button>' +
+              '<span class="status-text">' + (isRead ? '已读' : '未读') + '</span>' +
+            '</div>' +
+          '</div>';
+
+        list.appendChild(card);
+
+        (function(currentCard) {
+          var summary = currentCard.querySelector(".summary");
+          var importantBtn = currentCard.querySelector(".important-btn");
+          var id = summary.getAttribute("data-id");
+
+          var openDetail = function() {
+            if (!id) return;
+            markAsReadThenOpen(id);
+          };
+
+          summary.onclick = openDetail;
+          importantBtn.onclick = function(event) {
+            event.stopPropagation();
+            toggleImportant(id);
+          };
+        })(card);
+      }
+    }
+
+    function toggleImportant(id) {
+      if (!id) return;
+
+      var done = function(result) {
+        if (!result || !result.success || !result.data) {
+          showError((result && result.message) || "更新重要状态失败");
+          return;
+        }
+
+        for (var i = 0; i < allItems.length; i++) {
+          if (allItems[i] && allItems[i]._id === id) {
+            allItems[i].isImportant = result.data.isImportant === true;
+            break;
+          }
+        }
+        renderCurrentPage();
+      };
+
+      var fail = function() {
+        showError("网络错误，无法更新重要状态");
+      };
+
+      if (typeof fetch !== "undefined") {
+        fetch("/api/appointments/" + encodeURIComponent(id) + "/important?t=" + Date.now(), {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({})
+        })
+          .then(function(res) { return res.json(); })
+          .then(done)
+          .catch(fail);
+      } else {
+        var xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function() {
+          if (xhr.readyState === 4) {
+            if (xhr.status === 200) {
+              try {
+                done(JSON.parse(xhr.responseText));
+              } catch (e) {
+                fail();
+              }
+            } else {
+              fail();
+            }
+          }
+        };
+        xhr.onerror = fail;
+        xhr.open("POST", "/api/appointments/" + encodeURIComponent(id) + "/important?t=" + Date.now());
+        xhr.setRequestHeader("Content-Type", "application/json");
+        xhr.send("{}");
+      }
+    }
+
+    function markAllReadStatus(isRead) {
+      setStatus(isRead ? "批量标记已读中..." : "批量标记未读中...");
+
+      var done = function(result) {
+        if (!result || !result.success) {
+          showError((result && result.message) || "批量更新失败");
+          setStatus("批量更新失败");
+          return;
+        }
+
+        for (var i = 0; i < allItems.length; i++) {
+          if (allItems[i]) {
+            allItems[i].isRead = isRead;
+          }
+        }
+        renderCurrentPage();
+      };
+
+      var fail = function() {
+        showError("网络错误，无法批量更新");
+        setStatus("批量更新失败");
+      };
+
+      if (typeof fetch !== "undefined") {
+        fetch("/api/appointments/read-status?t=" + Date.now(), {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ isRead: isRead })
+        })
+          .then(function(res) { return res.json(); })
+          .then(done)
+          .catch(fail);
+      } else {
+        var xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function() {
+          if (xhr.readyState === 4) {
+            if (xhr.status === 200) {
+              try {
+                done(JSON.parse(xhr.responseText));
+              } catch (e) {
+                fail();
+              }
+            } else {
+              fail();
+            }
+          }
+        };
+        xhr.onerror = fail;
+        xhr.open("POST", "/api/appointments/read-status?t=" + Date.now());
+        xhr.setRequestHeader("Content-Type", "application/json");
+        xhr.send(JSON.stringify({ isRead: isRead }));
+      }
+    }
+
+    function markAsReadThenOpen(id) {
+      var hasOpened = false;
+      var openDetail = function() {
+        if (hasOpened) return;
+        hasOpened = true;
+        window.location.href = "/submission-detail.html?id=" + encodeURIComponent(id);
+      };
+
+      setTimeout(function() {
+        openDetail();
+      }, 350);
+
+      if (typeof fetch !== "undefined") {
+        fetch("/api/appointments/" + encodeURIComponent(id) + "/read?t=" + Date.now(), {
+          method: "POST",
+          cache: "no-store"
+        })
+          .then(function() { openDetail(); })
+          .catch(function() { openDetail(); });
+      } else {
+        var xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function() {
+          if (xhr.readyState === 4) {
+            openDetail();
+          }
+        };
+        xhr.onerror = function() {
+          openDetail();
+        };
+        xhr.open("POST", "/api/appointments/" + encodeURIComponent(id) + "/read?t=" + Date.now());
+        xhr.send();
+      }
+    }
+
+    function renderPagination(totalPages) {
+      var pagination = document.getElementById("pagination");
+      pagination.innerHTML = "";
+
+      if (totalPages <= 1) {
+        return;
+      }
+
+      var prevBtn = document.createElement("button");
+      prevBtn.type = "button";
+      prevBtn.className = "page-btn";
+      prevBtn.textContent = "上一页";
+      prevBtn.disabled = currentPage === 1;
+      prevBtn.onclick = function() {
+        if (currentPage > 1) {
+          currentPage -= 1;
+          renderCurrentPage();
+        }
+      };
+      pagination.appendChild(prevBtn);
+
+      for (var i = 1; i <= totalPages; i++) {
+        var pageBtn = document.createElement("button");
+        pageBtn.type = "button";
+        pageBtn.className = "page-btn" + (i === currentPage ? " active" : "");
+        pageBtn.textContent = String(i);
+        pageBtn.onclick = (function(pageNumber) {
+          return function() {
+            currentPage = pageNumber;
+            renderCurrentPage();
+          };
+        })(i);
+        pagination.appendChild(pageBtn);
+      }
+
+      var nextBtn = document.createElement("button");
+      nextBtn.type = "button";
+      nextBtn.className = "page-btn";
+      nextBtn.textContent = "下一页";
+      nextBtn.disabled = currentPage === totalPages;
+      nextBtn.onclick = function() {
+        if (currentPage < totalPages) {
+          currentPage += 1;
+          renderCurrentPage();
+        }
+      };
+      pagination.appendChild(nextBtn);
+    }
+
+    function renderCurrentPage() {
+      var total = allItems.length;
+      var totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+
+      if (currentPage > totalPages) {
+        currentPage = totalPages;
+      }
+
+      var start = (currentPage - 1) * PAGE_SIZE;
+      var end = start + PAGE_SIZE;
+      var currentItems = allItems.slice(start, end);
+
+      renderList(currentItems);
+      renderPagination(totalPages);
+      setStatus("共 " + total + " 条，第 " + currentPage + " / " + totalPages + " 页");
+    }
+
+    function setStatus(text) {
+      document.getElementById("status").textContent = text;
+    }
+
+    function showError(text) {
+      var message = document.getElementById("message");
+      message.innerHTML = '<div class="error">' + escapeHtml(text) + '</div>';
+    }
+
+    function fetchList() {
+      setStatus("加载中...");
+      showError("");
+
+      var done = function(result) {
+        if (!result || !result.success) {
+          showError((result && result.message) || "加载失败");
+          setStatus("加载失败");
+          return;
+        }
+        allItems = result.data || [];
+        currentPage = 1;
+        renderCurrentPage();
+      };
+
+      var fail = function() {
+        showError("网络错误，无法加载列表");
+        setStatus("加载失败");
+      };
+
+      if (typeof fetch !== "undefined") {
+        fetch("/api/appointments?limit=200&t=" + Date.now(), { cache: "no-store" })
+          .then(function(res) { return res.json(); })
+          .then(done)
+          .catch(fail);
+      } else {
+        var xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function() {
+          if (xhr.readyState === 4) {
+            if (xhr.status === 200) {
+              try {
+                done(JSON.parse(xhr.responseText));
+              } catch (e) {
+                fail();
+              }
+            } else {
+              fail();
+            }
+          }
+        };
+        xhr.onerror = fail;
+        xhr.open("GET", "/api/appointments?limit=200&t=" + Date.now());
+        xhr.send();
+      }
+    }
+
+    document.getElementById("refreshBtn").onclick = fetchList;
+    document.getElementById("markAllReadBtn").onclick = function() { markAllReadStatus(true); };
+    document.getElementById("markAllUnreadBtn").onclick = function() { markAllReadStatus(false); };
+    window.addEventListener("pageshow", function() {
+      fetchList();
+    });
+    fetchList();
+  </script>
+</body>
+</html>

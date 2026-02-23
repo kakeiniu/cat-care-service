@@ -12,9 +12,6 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// 让服务器直接提供前端页面
-app.use(express.static(path.join(__dirname, "../")));
-
 /* ========================
    ② 连接 MongoDB Atlas
 ======================== */
@@ -61,6 +58,18 @@ const appointmentSchema = new mongoose.Schema({
   ],
   time: String,
   note: String,
+  isImportant: {
+    type: Boolean,
+    default: false
+  },
+  isRead: {
+    type: Boolean,
+    default: false
+  },
+  readAt: {
+    type: Date,
+    default: null
+  },
   createdAt: {
     type: Date,
     default: Date.now
@@ -68,6 +77,40 @@ const appointmentSchema = new mongoose.Schema({
 });
 
 const Appointment = mongoose.model("Appointment", appointmentSchema);
+
+function parseBasicAuth(headerValue) {
+  if (!headerValue || typeof headerValue !== "string") return null;
+  if (headerValue.indexOf("Basic ") !== 0) return null;
+  const encoded = headerValue.slice(6);
+
+  try {
+    const decoded = Buffer.from(encoded, "base64").toString("utf8");
+    const sep = decoded.indexOf(":");
+    if (sep < 0) return null;
+    return {
+      username: decoded.slice(0, sep),
+      password: decoded.slice(sep + 1)
+    };
+  } catch (e) {
+    return null;
+  }
+}
+
+function requireAdmin(req, res, next) {
+  const adminUser = process.env.ADMIN_USER || "admin";
+  const adminPassword = process.env.ADMIN_PASSWORD || "admin123";
+  const credentials = parseBasicAuth(req.headers.authorization);
+
+  if (credentials && credentials.username === adminUser && credentials.password === adminPassword) {
+    return next();
+  }
+
+  res.set("WWW-Authenticate", 'Basic realm="Admin Area"');
+  return res.status(401).json({
+    success: false,
+    message: "仅管理员可访问"
+  });
+}
 
 /* ========================
    ④ 接收预约并保存到数据库
@@ -208,6 +251,188 @@ app.post("/api/appointment", async (req, res) => {
     });
   }
 });
+
+app.get("/api/appointments", requireAdmin, async (req, res) => {
+  try {
+    res.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+    res.set("Pragma", "no-cache");
+    res.set("Expires", "0");
+
+    if (mongoose.connection.readyState !== 1) {
+      return res.status(500).json({ success: false, message: "数据库连接失败，请稍后重试" });
+    }
+
+    const limitRaw = parseInt(req.query.limit, 10);
+    const limit = Number.isInteger(limitRaw) && limitRaw > 0 && limitRaw <= 500 ? limitRaw : 100;
+
+    const appointments = await Appointment.find({})
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .lean();
+
+    res.json({
+      success: true,
+      count: appointments.length,
+      data: appointments
+    });
+  } catch (err) {
+    console.error("❌ 查询预约列表失败：", err && err.message ? err.message : err);
+    res.status(500).json({
+      success: false,
+      message: "查询预约列表失败"
+    });
+  }
+});
+
+app.get("/api/appointments/:id", requireAdmin, async (req, res) => {
+  try {
+    res.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+    res.set("Pragma", "no-cache");
+    res.set("Expires", "0");
+
+    if (mongoose.connection.readyState !== 1) {
+      return res.status(500).json({ success: false, message: "数据库连接失败，请稍后重试" });
+    }
+
+    const id = req.params.id;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ success: false, message: "无效的记录 ID" });
+    }
+
+    const appointment = await Appointment.findById(id);
+    if (!appointment) {
+      return res.status(404).json({ success: false, message: "记录不存在" });
+    }
+
+    if (!appointment.isRead) {
+      appointment.isRead = true;
+      appointment.readAt = new Date();
+      await appointment.save();
+    }
+
+    res.json({ success: true, data: appointment.toObject() });
+  } catch (err) {
+    console.error("❌ 查询预约详情失败：", err && err.message ? err.message : err);
+    res.status(500).json({
+      success: false,
+      message: "查询预约详情失败"
+    });
+  }
+});
+
+app.post("/api/appointments/:id/read", requireAdmin, async (req, res) => {
+  try {
+    res.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+    res.set("Pragma", "no-cache");
+    res.set("Expires", "0");
+
+    if (mongoose.connection.readyState !== 1) {
+      return res.status(500).json({ success: false, message: "数据库连接失败，请稍后重试" });
+    }
+
+    const id = req.params.id;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ success: false, message: "无效的记录 ID" });
+    }
+
+    const appointment = await Appointment.findById(id);
+    if (!appointment) {
+      return res.status(404).json({ success: false, message: "记录不存在" });
+    }
+
+    if (!appointment.isRead) {
+      appointment.isRead = true;
+      appointment.readAt = new Date();
+      await appointment.save();
+    }
+
+    res.json({ success: true, data: appointment.toObject() });
+  } catch (err) {
+    console.error("❌ 标记已读失败：", err && err.message ? err.message : err);
+    res.status(500).json({
+      success: false,
+      message: "标记已读失败"
+    });
+  }
+});
+
+app.post("/api/appointments/:id/important", requireAdmin, async (req, res) => {
+  try {
+    res.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+    res.set("Pragma", "no-cache");
+    res.set("Expires", "0");
+
+    if (mongoose.connection.readyState !== 1) {
+      return res.status(500).json({ success: false, message: "数据库连接失败，请稍后重试" });
+    }
+
+    const id = req.params.id;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ success: false, message: "无效的记录 ID" });
+    }
+
+    const appointment = await Appointment.findById(id);
+    if (!appointment) {
+      return res.status(404).json({ success: false, message: "记录不存在" });
+    }
+
+    const hasExplicitImportant = req.body && typeof req.body.isImportant === "boolean";
+    appointment.isImportant = hasExplicitImportant ? req.body.isImportant : !appointment.isImportant;
+    await appointment.save();
+
+    res.json({ success: true, data: appointment.toObject() });
+  } catch (err) {
+    console.error("❌ 标记重要失败：", err && err.message ? err.message : err);
+    res.status(500).json({
+      success: false,
+      message: "标记重要失败"
+    });
+  }
+});
+
+app.post("/api/appointments/read-status", requireAdmin, async (req, res) => {
+  try {
+    res.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+    res.set("Pragma", "no-cache");
+    res.set("Expires", "0");
+
+    if (mongoose.connection.readyState !== 1) {
+      return res.status(500).json({ success: false, message: "数据库连接失败，请稍后重试" });
+    }
+
+    const isRead = req.body && typeof req.body.isRead === "boolean" ? req.body.isRead : null;
+    if (isRead === null) {
+      return res.status(400).json({ success: false, message: "isRead 必须是布尔值" });
+    }
+
+    const updateDoc = {
+      isRead: isRead,
+      readAt: isRead ? new Date() : null
+    };
+
+    const result = await Appointment.updateMany({}, { $set: updateDoc });
+    const modifiedCount = typeof result.modifiedCount === "number" ? result.modifiedCount : (result.nModified || 0);
+
+    res.json({ success: true, modifiedCount: modifiedCount });
+  } catch (err) {
+    console.error("❌ 批量更新已读状态失败：", err && err.message ? err.message : err);
+    res.status(500).json({
+      success: false,
+      message: "批量更新已读状态失败"
+    });
+  }
+});
+
+app.get("/submissions.html", requireAdmin, (req, res) => {
+  res.sendFile(path.join(__dirname, "../submissions.html"));
+});
+
+app.get("/submission-detail.html", requireAdmin, (req, res) => {
+  res.sendFile(path.join(__dirname, "../submission-detail.html"));
+});
+
+// 让服务器提供公开前端页面（预约提交页等）
+app.use(express.static(path.join(__dirname, "../")));
 
 /* ========================
    ⑤ 测试接口
