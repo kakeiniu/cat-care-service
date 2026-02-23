@@ -46,11 +46,19 @@ db.on("disconnected", () => {
    ③ 定义预约数据模型
 ======================== */
 const appointmentSchema = new mongoose.Schema({
+  contactType: String,
   contact: String,
   address: String,
   catName: String,
   catAge: String,
   date: String,
+  dates: [String],
+  visits: [
+    {
+      date: String,
+      time: String
+    }
+  ],
   time: String,
   note: String,
   createdAt: {
@@ -75,9 +83,12 @@ app.post("/api/appointment", async (req, res) => {
     }
 
     // ===== 后端验证 =====
-    const { contact, address, catName, catAge, date, time, note } = req.body;
+    const { contactType, contact, address, catName, catAge, date, dates, visits, time, note } = req.body;
 
     // 必填字段验证
+    if (!contactType || !contactType.trim()) {
+      return res.status(400).json({ success: false, message: "联系方式类型不能为空" });
+    }
     if (!contact || !contact.trim()) {
       return res.status(400).json({ success: false, message: "联系方式不能为空" });
     }
@@ -90,40 +101,92 @@ app.post("/api/appointment", async (req, res) => {
     if (!catAge || !catAge.trim()) {
       return res.status(400).json({ success: false, message: "猫咪年龄不能为空" });
     }
-    if (!date) {
-      return res.status(400).json({ success: false, message: "服务日期不能为空" });
-    }
-    if (!time) {
-      return res.status(400).json({ success: false, message: "服务时间不能为空" });
+    const normalizedVisits = Array.isArray(visits)
+      ? visits
+          .filter((item) => item && typeof item.date === "string" && item.date.trim())
+          .map((item) => ({
+            date: item.date.trim(),
+            time: typeof item.time === "string" ? item.time.trim() : ""
+          }))
+      : [];
+
+    if (normalizedVisits.length === 0) {
+      const normalizedDates = Array.isArray(dates)
+        ? dates.filter((item) => typeof item === "string" && item.trim())
+        : (date ? [date] : []);
+
+      if (normalizedDates.length === 0) {
+        return res.status(400).json({ success: false, message: "服务日期不能为空" });
+      }
+      if (!time || !time.trim()) {
+        return res.status(400).json({ success: false, message: "服务时间不能为空" });
+      }
+
+      normalizedDates.forEach((item) => {
+        normalizedVisits.push({ date: item, time: time.trim() });
+      });
     }
 
-    // 联系方式验证（至少7个字符）
-    if (contact.trim().length < 7) {
-      return res.status(400).json({ success: false, message: "联系方式过短，请确认是否完整" });
+    if (normalizedVisits.length === 0) {
+      return res.status(400).json({ success: false, message: "服务日期不能为空" });
+    }
+
+    for (const visit of normalizedVisits) {
+      if (!visit.time) {
+        return res.status(400).json({ success: false, message: `日期 ${visit.date} 缺少服务时间` });
+      }
+    }
+
+    // 根据类型验证联系方式
+    if (contactType === "电话") {
+      // 日本电话：
+      // 手机：090-1234-5678 或 09012345678（11位）
+      // 固定电话：0456-12-3456 或 045612345（10位）
+      const phoneDigits = contact.replace(/-/g, "");
+      if (!/^0\d{9,10}$/.test(phoneDigits)) {
+        return res.status(400).json({ success: false, message: "电话格式错误，请输入手机（090-1234-5678）或固定电话（0456-12-3456）" });
+      }
+    } else if (contactType === "邮箱") {
+      // 邮箱格式验证
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact)) {
+        return res.status(400).json({ success: false, message: "邮箱格式错误，请输入有效的邮箱地址" });
+      }
+    } else if (contactType === "微信") {
+      // 微信号长度检查
+      if (contact.length < 5 || contact.length > 20) {
+        return res.status(400).json({ success: false, message: "微信号长度应在 5-20 个字符之间" });
+      }
+    } else {
+      return res.status(400).json({ success: false, message: "无效的联系方式类型" });
     }
 
     // 日期格式验证（YYYY-MM-DD）
     const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-    if (!dateRegex.test(date)) {
-      return res.status(400).json({ success: false, message: "日期格式错误" });
-    }
-
-    // 日期是否有效且不在过去
-    const selectedDate = new Date(date);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    if (isNaN(selectedDate.getTime()) || selectedDate < today) {
-      return res.status(400).json({ success: false, message: "日期无效或已过期" });
+
+    for (const visit of normalizedVisits) {
+      if (!dateRegex.test(visit.date)) {
+        return res.status(400).json({ success: false, message: "日期格式错误" });
+      }
+
+      const selectedDate = new Date(visit.date);
+      if (isNaN(selectedDate.getTime()) || selectedDate < today) {
+        return res.status(400).json({ success: false, message: "日期无效或已过期" });
+      }
     }
 
     // 创建预约对象
     const appointment = new Appointment({
+      contactType: contactType.trim(),
       contact: contact.trim(),
-      address: address.trim(),
+      address: address,
       catName: catName.trim(),
       catAge: catAge.trim(),
-      date,
-      time,
+      date: normalizedVisits[0].date,
+      dates: normalizedVisits.map((item) => item.date),
+      visits: normalizedVisits,
+      time: normalizedVisits.map((item) => `${item.date} ${item.time}`).join("；"),
       note: note ? note.trim() : ""
     });
 

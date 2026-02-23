@@ -79,6 +79,76 @@
       color: #0c5460;
       border: 1px solid #bee5eb;
     }
+    .date-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-top: 5px;
+    }
+    .date-row input {
+      flex: 1;
+      margin-top: 0;
+    }
+    .small-btn {
+      width: auto;
+      margin-top: 0;
+      padding: 8px 12px;
+      font-size: 14px;
+      white-space: nowrap;
+    }
+    .date-list {
+      margin-top: 8px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .date-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #eef7ef;
+      border: 1px solid #cfe8d1;
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 13px;
+    }
+    .date-tag button {
+      width: auto;
+      margin-top: 0;
+      padding: 2px 6px;
+      font-size: 12px;
+      background: #d9534f;
+      border-radius: 999px;
+    }
+    .date-help {
+      margin-top: 6px;
+      font-size: 12px;
+      color: #666;
+    }
+    .visit-list {
+      margin-top: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .visit-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      border: 1px solid #e5e5e5;
+      border-radius: 8px;
+      padding: 8px;
+      background: #fafafa;
+    }
+    .visit-date {
+      min-width: 120px;
+      font-weight: bold;
+      color: #333;
+    }
+    .visit-time {
+      flex: 1;
+      margin-top: 0;
+    }
   </style>
 </head>
 
@@ -86,11 +156,40 @@
   <div class="box">
     <h2>🐱 猫咪上门看护预约</h2>
 
-    <label>联系方式 <span class="required">*</span></label>
-    <input id="contact" placeholder="请输入电话号码或微信" />
+    <label>联系方式类型 <span class="required">*</span></label>
+    <select id="contactType">
+      <option value="">-- 请选择 --</option>
+      <option value="电话">电话</option>
+      <option value="微信">微信</option>
+      <option value="邮箱">邮箱</option>
+    </select>
 
-    <label>上门地址 <span class="required">*</span></label>
-    <input id="address" placeholder="请输入详细地址" />
+    <label>联系方式 <span class="required">*</span></label>
+    <input id="contact" placeholder="手机：090-1234-5678；固定电话：0456-12-3456；邮箱：xxx@example.com；微信：xxxxxxx" />
+
+    <label>上门地区（都道府県） <span class="required">*</span></label>
+    <select id="prefecture" onchange="updateWard()">
+      <option value="">-- 请选择都道府県 --</option>
+      <option value="東京都">東京都</option>
+      <option value="埼玉県">埼玉県</option>
+      <option value="神奈川県">神奈川県</option>
+      <option value="千葉県">千葉県</option>
+    </select>
+
+    <div id="citySection" style="display: none;">
+      <label>上门地区（市） <span class="required">*</span></label>
+      <select id="city" onchange="updateDistrict()">
+        <option value="">-- 先选择都道府県 --</option>
+      </select>
+    </div>
+
+    <label>上门地区（区） <span class="required">*</span></label>
+    <select id="district">
+      <option value="">-- 先选择市 --</option>
+    </select>
+
+    <label>详细地址（从几丁目后开始输入，例：1-2-3 ○○ビル3階） <span class="required">*</span></label>
+    <input id="addressDetail" placeholder="例如：1-2-3、1番地1号、○○ビル3階（几丁目前面的内容请在上方下拉选择）" />
 
     <label>猫咪名字 <span class="required">*</span></label>
     <input id="catName" placeholder="请输入猫咪名字" />
@@ -98,16 +197,31 @@
     <label>猫咪年龄 <span class="required">*</span></label>
     <input id="catAge" placeholder="例如：3岁" />
 
-    <label>服务日期 <span class="required">*</span></label>
-    <input type="date" id="date" />
-
-    <label>服务时间 <span class="required">*</span></label>
-    <select id="time">
-      <option value="">-- 请选择 --</option>
-      <option value="上午（9:00 - 12:00）">上午（9:00 - 12:00）</option>
-      <option value="下午（13:00 - 17:00）">下午（13:00 - 17:00）</option>
-      <option value="晚上（18:00 - 21:00）">晚上（18:00 - 21:00）</option>
+    <label>预约方式 <span class="required">*</span></label>
+    <select id="bookingMode" onchange="onBookingModeChange()">
+      <option value="separate">分开日期（不连续）</option>
+      <option value="range">一段区间（连续）</option>
     </select>
+
+    <div id="separateDateSection">
+      <label>服务日期（分开添加） <span class="required">*</span></label>
+      <div class="date-row">
+        <input type="date" id="date" />
+        <button type="button" class="small-btn" onclick="addSingleDate()">添加日期</button>
+      </div>
+    </div>
+
+    <div id="rangeDateSection" style="display: none;">
+      <label>服务日期区间 <span class="required">*</span></label>
+      <div class="date-row">
+        <input type="date" id="startDate" />
+        <input type="date" id="endDate" />
+        <button type="button" class="small-btn" onclick="addDateRange()">添加区间</button>
+      </div>
+    </div>
+
+    <div class="date-help">添加后请为每个日期分别选择上门时间；区间修改时会保留重叠日期的时间设置</div>
+    <div id="visitList" class="visit-list"></div>
 
     <label>备注（可选）</label>
     <textarea id="note" placeholder="例如：猫咪性格、特殊需求等"></textarea>
@@ -127,6 +241,140 @@
 
   <!-- ✅ 业务逻辑 -->
   <script>
+    // 级联菜单数据（3县全市 + 东京23区）
+    const areaData = {
+      "東京都": {
+        type: "ward",
+        items: [
+          "千代田区", "中央区", "港区", "新宿区", "文京区", "台東区", "墨田区", "江東区",
+          "品川区", "目黒区", "大田区", "世田谷区", "渋谷区", "中野区", "杉並区", "豊島区",
+          "北区", "荒川区", "板橋区", "練馬区", "足立区", "葛飾区", "江戸川区"
+        ]
+      },
+      "埼玉県": {
+        type: "city",
+        items: [
+          "さいたま市", "川越市", "熊谷市", "川口市", "行田市", "秩父市", "所沢市", "飯能市",
+          "加須市", "本庄市", "東松山市", "春日部市", "狭山市", "羽生市", "鴻巣市", "深谷市",
+          "上尾市", "草加市", "越谷市", "蕨市", "戸田市", "入間市", "朝霞市", "志木市",
+          "和光市", "新座市", "桶川市", "久喜市", "北本市", "八潮市", "富士見市", "三郷市",
+          "蓮田市", "坂戸市", "幸手市", "鶴ヶ島市", "日高市", "吉川市", "ふじみ野市", "白岡市"
+        ]
+      },
+      "神奈川県": {
+        type: "city",
+        items: [
+          "横浜市", "川崎市", "相模原市", "横須賀市", "平塚市", "鎌倉市", "藤沢市", "小田原市",
+          "茅ヶ崎市", "逗子市", "三浦市", "秦野市", "厚木市", "大和市", "伊勢原市", "海老名市",
+          "座間市", "南足柄市", "綾瀬市"
+        ]
+      },
+      "千葉県": {
+        type: "city",
+        items: [
+          "千葉市", "銚子市", "市川市", "船橋市", "館山市", "木更津市", "松戸市", "野田市",
+          "茂原市", "成田市", "佐倉市", "東金市", "旭市", "習志野市", "柏市", "勝浦市",
+          "市原市", "流山市", "八千代市", "我孫子市", "鴨川市", "鎌ケ谷市", "君津市", "富津市",
+          "浦安市", "四街道市", "袖ケ浦市", "八街市", "印西市", "白井市", "富里市", "南房総市",
+          "匝瑳市", "香取市", "山武市", "いすみ市", "大網白里市"
+        ]
+      }
+    };
+
+    const TOWN_API = "https://geoapi.heartrails.com/api/json?method=getTowns";
+    const TIME_OPTIONS = [
+      "上午（9:00 - 12:00）",
+      "下午（13:00 - 17:00）",
+      "晚上（18:00 - 21:00）"
+    ];
+    let selectedVisits = [];
+
+    // 更新市/区的级联菜单函数
+    function updateWard() {
+      const prefecture = document.getElementById("prefecture").value;
+      const citySection = document.getElementById("citySection");
+      const citySelect = document.getElementById("city");
+      const districtSelect = document.getElementById("district");
+      
+      // 清空市和区
+      citySelect.innerHTML = '';
+      districtSelect.innerHTML = '';
+      
+      if (!prefecture) {
+        citySelect.innerHTML = '<option value="">-- 先选择都道府県 --</option>';
+        districtSelect.innerHTML = '<option value="">-- 先选择市 --</option>';
+        citySection.style.display = 'none';
+        return;
+      }
+      
+      const prefData = areaData[prefecture];
+      if (prefData.type === "ward") {
+        // 东京特殊处理：直接显示区，隐藏市选择
+        citySection.style.display = 'none';
+        citySelect.value = '';
+        districtSelect.innerHTML = '<option value="">-- 请选择' + prefecture + '的区 --</option>';
+        prefData.items.forEach(ward => {
+          const option = document.createElement("option");
+          option.value = prefecture + ward;
+          option.textContent = ward;
+          districtSelect.appendChild(option);
+        });
+      } else {
+        // 其他县：显示市选择，然后按市动态加载区/町域
+        citySection.style.display = 'block';
+        citySelect.innerHTML = '<option value="">-- 请选择市 --</option>';
+        districtSelect.innerHTML = '<option value="">-- 先选择市 --</option>';
+        prefData.items.forEach(city => {
+          const option = document.createElement("option");
+          option.value = city;
+          option.textContent = city;
+          citySelect.appendChild(option);
+        });
+      }
+    }
+
+    // 更新区的级联菜单函数
+    async function updateDistrict() {
+      const prefecture = document.getElementById("prefecture").value;
+      const city = document.getElementById("city").value;
+      const districtSelect = document.getElementById("district");
+      
+      districtSelect.innerHTML = '';
+      
+      if (!prefecture || !city) {
+        districtSelect.innerHTML = '<option value="">-- 先选择市 --</option>';
+        return;
+      }
+      
+      districtSelect.innerHTML = '<option value="">-- 正在加载区/町域... --</option>';
+
+      try {
+        const url = `${TOWN_API}&prefecture=${encodeURIComponent(prefecture)}&city=${encodeURIComponent(city)}`;
+        const res = await fetch(url);
+        const json = await res.json();
+        const locations = json?.response?.location || [];
+        const towns = [...new Set(locations.map(item => item.town).filter(Boolean))];
+
+        districtSelect.innerHTML = '';
+        if (towns.length === 0) {
+          districtSelect.innerHTML = '<option value="' + city + '">' + city + '（全域）</option>';
+          districtSelect.value = city + '（全域）';
+          return;
+        }
+
+        districtSelect.innerHTML = '<option value="">-- 请选择' + city + '的区/町域 --</option>';
+        towns.forEach(town => {
+          const option = document.createElement("option");
+          option.value = town;
+          option.textContent = town;
+          districtSelect.appendChild(option);
+        });
+      } catch (error) {
+        districtSelect.innerHTML = '<option value="' + city + '">' + city + '（全域）</option>';
+        districtSelect.value = city + '（全域）';
+      }
+    }
+
     // 显示消息
     function showMessage(text, type) {
       const msg = document.getElementById("message");
@@ -141,42 +389,253 @@
       }
     }
 
+    function getTodayISO() {
+      const today = new Date();
+      const yyyy = today.getFullYear();
+      const mm = String(today.getMonth() + 1).padStart(2, "0");
+      const dd = String(today.getDate()).padStart(2, "0");
+      return `${yyyy}-${mm}-${dd}`;
+    }
+
+    function onBookingModeChange() {
+      const mode = document.getElementById("bookingMode").value;
+      const separateSection = document.getElementById("separateDateSection");
+      const rangeSection = document.getElementById("rangeDateSection");
+      if (mode === "range") {
+        separateSection.style.display = "none";
+        rangeSection.style.display = "block";
+      } else {
+        separateSection.style.display = "block";
+        rangeSection.style.display = "none";
+      }
+    }
+
+    function renderVisitList() {
+      const visitList = document.getElementById("visitList");
+      visitList.innerHTML = "";
+
+      selectedVisits.forEach(visit => {
+        const row = document.createElement("div");
+        row.className = "visit-row";
+
+        const dateLabel = document.createElement("span");
+        dateLabel.className = "visit-date";
+        dateLabel.textContent = visit.date;
+
+        const timeSelect = document.createElement("select");
+        timeSelect.className = "visit-time";
+        timeSelect.innerHTML = '<option value="">-- 请选择上门时间 --</option>';
+        TIME_OPTIONS.forEach(timeText => {
+          const option = document.createElement("option");
+          option.value = timeText;
+          option.textContent = timeText;
+          if (visit.time === timeText) {
+            option.selected = true;
+          }
+          timeSelect.appendChild(option);
+        });
+        timeSelect.onchange = (event) => {
+          updateVisitTime(visit.date, event.target.value);
+        };
+
+        const removeBtn = document.createElement("button");
+        removeBtn.type = "button";
+        removeBtn.className = "small-btn";
+        removeBtn.style.background = "#d9534f";
+        removeBtn.textContent = "删除";
+        removeBtn.onclick = () => removeVisitDate(visit.date);
+
+        row.appendChild(dateLabel);
+        row.appendChild(timeSelect);
+        row.appendChild(removeBtn);
+        visitList.appendChild(row);
+      });
+    }
+
+    function updateVisitTime(dateValue, timeValue) {
+      selectedVisits = selectedVisits.map(visit =>
+        visit.date === dateValue ? { ...visit, time: timeValue } : visit
+      );
+    }
+
+    function addVisitDate(dateValue) {
+      if (selectedVisits.some(visit => visit.date === dateValue)) {
+        showMessage("❌ 该日期已添加", "error");
+        return false;
+      }
+
+      const todayISO = getTodayISO();
+      if (dateValue < todayISO) {
+        showMessage("❌ 服务日期不能是过去的日期", "error");
+        return false;
+      }
+
+      selectedVisits.push({ date: dateValue, time: "" });
+      selectedVisits.sort((a, b) => a.date.localeCompare(b.date));
+      renderVisitList();
+      return true;
+    }
+
+    function addSingleDate() {
+      const dateInput = document.getElementById("date");
+      const dateValue = dateInput.value;
+      if (!dateValue) {
+        showMessage("❌ 请先选择一个日期", "error");
+        return;
+      }
+
+      const added = addVisitDate(dateValue);
+      if (!added) {
+        return;
+      }
+
+      dateInput.value = "";
+      showMessage("✅ 日期已添加，请为该日期选择时间", "loading");
+    }
+
+    function addDateRange() {
+      const startDate = document.getElementById("startDate").value;
+      const endDate = document.getElementById("endDate").value;
+
+      if (!startDate || !endDate) {
+        showMessage("❌ 请先选择开始和结束日期", "error");
+        return;
+      }
+
+      if (endDate < startDate) {
+        showMessage("❌ 结束日期不能早于开始日期", "error");
+        return;
+      }
+
+      // 智能区间更新：重叠日期保留原时间，超出范围自动移除，新日期自动补充
+      const nextDateSet = new Set();
+      let current = new Date(startDate + "T00:00:00");
+      const end = new Date(endDate + "T00:00:00");
+
+      while (current <= end) {
+        const yyyy = current.getFullYear();
+        const mm = String(current.getMonth() + 1).padStart(2, "0");
+        const dd = String(current.getDate()).padStart(2, "0");
+        nextDateSet.add(`${yyyy}-${mm}-${dd}`);
+        current.setDate(current.getDate() + 1);
+      }
+
+      const visitMap = new Map(selectedVisits.map(visit => [visit.date, visit]));
+      const nextVisits = [];
+      let addedCount = 0;
+
+      Array.from(nextDateSet).sort().forEach(dateValue => {
+        if (visitMap.has(dateValue)) {
+          nextVisits.push(visitMap.get(dateValue));
+        } else {
+          nextVisits.push({ date: dateValue, time: "" });
+          addedCount += 1;
+        }
+      });
+
+      selectedVisits = nextVisits;
+      renderVisitList();
+
+      if (addedCount > 0) {
+        showMessage(`✅ 区间已更新，新增 ${addedCount} 个日期，请补充时间`, "loading");
+      } else {
+        showMessage("✅ 区间已更新，已保留重叠日期的时间设置", "loading");
+      }
+    }
+
+    function removeVisitDate(dateValue) {
+      selectedVisits = selectedVisits.filter(visit => visit.date !== dateValue);
+      renderVisitList();
+    }
+
+    // 设置日期最小值（过去日期不可选）
+    function setDateMin() {
+      const dateInput = document.getElementById("date");
+      const startDateInput = document.getElementById("startDate");
+      const endDateInput = document.getElementById("endDate");
+      dateInput.min = getTodayISO();
+      startDateInput.min = getTodayISO();
+      endDateInput.min = getTodayISO();
+    }
+
     // 清空表单
     function clearForm() {
+      document.getElementById("contactType").value = "";
       document.getElementById("contact").value = "";
-      document.getElementById("address").value = "";
+      document.getElementById("prefecture").value = "";
+      document.getElementById("city").value = "";
+      document.getElementById("district").value = "";
+      document.getElementById("addressDetail").value = "";
       document.getElementById("catName").value = "";
       document.getElementById("catAge").value = "";
+      document.getElementById("bookingMode").value = "separate";
       document.getElementById("date").value = "";
-      document.getElementById("time").value = "";
+      document.getElementById("startDate").value = "";
+      document.getElementById("endDate").value = "";
+      selectedVisits = [];
+      renderVisitList();
+      onBookingModeChange();
       document.getElementById("note").value = "";
+      setDateMin();
+      updateWard();
     }
 
     // 验证表单
     function validateForm() {
+      const contactType = document.getElementById("contactType").value;
       const contact = document.getElementById("contact").value.trim();
-      const address = document.getElementById("address").value.trim();
+      const prefecture = document.getElementById("prefecture").value;
+      const city = document.getElementById("city").value;
+      const district = document.getElementById("district").value;
+      const addressDetail = document.getElementById("addressDetail").value.trim();
       const catName = document.getElementById("catName").value.trim();
       const catAge = document.getElementById("catAge").value.trim();
-      const date = document.getElementById("date").value;
-      const time = document.getElementById("time").value;
 
       // 必填检查
+      if (!contactType) return "❌ 联系方式类型不能为空";
       if (!contact) return "❌ 联系方式不能为空";
-      if (!address) return "❌ 上门地址不能为空";
+      if (!prefecture) return "❌ 都道府県不能为空";
+      if (!city && areaData[prefecture].type === "city") return "❌ 市不能为空";
+      if (!district) return "❌ 区/市不能为空";
+      if (!addressDetail) return "❌ 详细地址不能为空";
       if (!catName) return "❌ 猫咪名字不能为空";
       if (!catAge) return "❌ 猫咪年龄不能为空";
-      if (!date) return "❌ 服务日期不能为空";
-      if (!time) return "❌ 服务时间不能为空";
+      if (selectedVisits.length === 0) return "❌ 请至少添加一个服务日期";
 
-      // 联系方式长度检查（电话至少7位）
-      if (contact.length < 7) return "❌ 联系方式过短，请确认是否完整";
+      for (const visit of selectedVisits) {
+        if (!visit.time) {
+          return `❌ 请为日期 ${visit.date} 选择上门时间`;
+        }
+      }
+
+      // 根据类型验证联系方式
+      if (contactType === "电话") {
+        // 日本电话：
+        // 手机：090-1234-5678 或 09012345678（11位）
+        // 固定电话：0456-12-3456 或 045612345（10位）
+        const phoneDigits = contact.replace(/-/g, "");
+        if (!/^0\d{9,10}$/.test(phoneDigits)) {
+          return "❌ 电话格式错误，请输入手机（090-1234-5678）或固定电话（0456-12-3456）";
+        }
+      } else if (contactType === "邮箱") {
+        // 邮箱格式验证
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact)) {
+          return "❌ 邮箱格式错误，请输入有效的邮箱地址";
+        }
+      } else if (contactType === "微信") {
+        // 微信号长度检查
+        if (contact.length < 5 || contact.length > 20) {
+          return "❌ 微信号长度应在 5-20 个字符之间";
+        }
+      }
 
       // 日期检查（不能是过去的日期）
-      const selectedDate = new Date(date);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      if (selectedDate < today) return "❌ 服务日期不能是过去的日期";
+      const todayISO = getTodayISO();
+      for (const visit of selectedVisits) {
+        if (visit.date < todayISO) {
+          return "❌ 服务日期不能是过去的日期";
+        }
+      }
 
       return null; // 验证通过
     }
@@ -190,13 +649,30 @@
       }
 
       const submit_btn = document.getElementById("submitBtn");
+      const prefecture = document.getElementById("prefecture").value;
+      const city = document.getElementById("city").value;
+      const district = document.getElementById("district").value;
+      const addressDetail = document.getElementById("addressDetail").value.trim();
+      
+      // 根据都道府県类型组合地址
+      let address = "";
+      const prefData = areaData[prefecture];
+      if (prefData.type === "ward") {
+        address = prefecture + district + " " + addressDetail;
+      } else {
+        address = prefecture + city + district + " " + addressDetail;
+      }
+      
       const data = {
+        contactType: document.getElementById("contactType").value,
         contact: document.getElementById("contact").value.trim(),
-        address: document.getElementById("address").value.trim(),
+        address: address,
         catName: document.getElementById("catName").value.trim(),
         catAge: document.getElementById("catAge").value.trim(),
-        date: document.getElementById("date").value,
-        time: document.getElementById("time").value,
+        date: selectedVisits[0].date,
+        dates: selectedVisits.map(visit => visit.date),
+        visits: selectedVisits,
+        time: selectedVisits.map(visit => `${visit.date} ${visit.time}`).join("；"),
         note: document.getElementById("note").value.trim()
       };
 
@@ -229,7 +705,8 @@
           console.warn("邮件发送失败（不影响数据库保存）：", emailErr);
         }
 
-        showMessage("✅ " + result.message + "，请等待 1–2 天客服联系", "success");
+        alert("您已提交，请等待工作人员联系");
+        showMessage("✅ " + result.message + "，请等待工作人员联系", "success");
       } catch (e) {
         console.error("❌ 错误：", e);
         showMessage("❌ " + (e.message || "提交失败，请重试"), "error");
@@ -237,6 +714,9 @@
         submit_btn.disabled = false;
       }
     }
+
+    setDateMin();
+    onBookingModeChange();
   </script>
 </body>
 </html>
