@@ -71,13 +71,67 @@ app.post("/api/appointment", async (req, res) => {
 
     if (mongoose.connection.readyState !== 1) {
       console.error("❌ MongoDB 未连接，当前状态：", mongoose.connection.readyState);
-      return res.status(500).json({ success: false, message: "数据库未连接" });
+      return res.status(500).json({ success: false, message: "数据库连接失败，请稍后重试" });
     }
 
-    const appointment = new Appointment(req.body);
+    // ===== 后端验证 =====
+    const { contact, address, catName, catAge, date, time, note } = req.body;
+
+    // 必填字段验证
+    if (!contact || !contact.trim()) {
+      return res.status(400).json({ success: false, message: "联系方式不能为空" });
+    }
+    if (!address || !address.trim()) {
+      return res.status(400).json({ success: false, message: "上门地址不能为空" });
+    }
+    if (!catName || !catName.trim()) {
+      return res.status(400).json({ success: false, message: "猫咪名字不能为空" });
+    }
+    if (!catAge || !catAge.trim()) {
+      return res.status(400).json({ success: false, message: "猫咪年龄不能为空" });
+    }
+    if (!date) {
+      return res.status(400).json({ success: false, message: "服务日期不能为空" });
+    }
+    if (!time) {
+      return res.status(400).json({ success: false, message: "服务时间不能为空" });
+    }
+
+    // 联系方式验证（至少7个字符）
+    if (contact.trim().length < 7) {
+      return res.status(400).json({ success: false, message: "联系方式过短，请确认是否完整" });
+    }
+
+    // 日期格式验证（YYYY-MM-DD）
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(date)) {
+      return res.status(400).json({ success: false, message: "日期格式错误" });
+    }
+
+    // 日期是否有效且不在过去
+    const selectedDate = new Date(date);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (isNaN(selectedDate.getTime()) || selectedDate < today) {
+      return res.status(400).json({ success: false, message: "日期无效或已过期" });
+    }
+
+    // 创建预约对象
+    const appointment = new Appointment({
+      contact: contact.trim(),
+      address: address.trim(),
+      catName: catName.trim(),
+      catAge: catAge.trim(),
+      date,
+      time,
+      note: note ? note.trim() : ""
+    });
+
+    // 保存到数据库
     await appointment.save();
 
     console.log("✅ 已成功保存到 MongoDB");
+    console.log("预约 ID：", appointment._id);
 
     res.json({
       success: true,
@@ -87,7 +141,7 @@ app.post("/api/appointment", async (req, res) => {
     console.error("❌ 保存失败：", err.message);
     res.status(500).json({
       success: false,
-      message: "服务器保存失败"
+      message: err.message || "服务器保存失败，请稍后重试"
     });
   }
 });
