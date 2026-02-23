@@ -22,8 +22,6 @@ const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://kakeiniu_DB:Hyron11%23
 
 mongoose
   .connect(MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
     serverSelectionTimeoutMS: 10000
   })
   .then(() => {
