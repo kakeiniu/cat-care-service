@@ -182,6 +182,9 @@
     <label>联系方式 <span class="required">*</span></label>
     <input id="contact" placeholder="手机：090-1234-5678；固定电话：0456-12-3456；邮箱：xxx@example.com；微信：xxxxxxx" />
 
+    <label>客户姓名 <span class="required">*</span></label>
+    <input id="ownerName" placeholder="请输入您的姓名" />
+
     <label>上门地区（都道府県） <span class="required">*</span></label>
     <select id="prefecture" onchange="updateWard()">
       <option value="">-- 请选择都道府県 --</option>
@@ -244,6 +247,7 @@
     <button id="submitBtn" onclick="submitAppointment()">提交预约</button>
 
     <div id="message" class="message"></div>
+    <div class="date-help"><a href="/manage-appointment.html">已有预约？点此找回预约，随后进入独立页面修改或取消</a></div>
   </div>
 
   <!-- ✅ EmailJS SDK -->
@@ -670,6 +674,7 @@
     function clearForm() {
       document.getElementById("contactType").value = "";
       document.getElementById("contact").value = "";
+      document.getElementById("ownerName").value = "";
       document.getElementById("prefecture").value = "";
       document.getElementById("city").value = "";
       document.getElementById("district").value = "";
@@ -692,6 +697,7 @@
     function validateForm() {
       var contactType = document.getElementById("contactType").value;
       var contact = (document.getElementById("contact").value || "").trim();
+      var ownerName = (document.getElementById("ownerName").value || "").trim();
       var prefecture = document.getElementById("prefecture").value;
       var city = document.getElementById("city").value;
       var district = document.getElementById("district").value;
@@ -700,6 +706,7 @@
       var catAge = (document.getElementById("catAge").value || "").trim();
 
       // 必填检查
+      if (!ownerName) return "❌ 客户姓名不能为空";
       if (!contactType) return "❌ 联系方式类型不能为空";
       if (!contact) return "❌ 联系方式不能为空";
       if (!prefecture) return "❌ 都道府県不能为空";
@@ -781,6 +788,7 @@
       }
       
       var data = {
+        ownerName: (document.getElementById("ownerName").value || "").trim(),
         contactType: document.getElementById("contactType").value,
         contact: (document.getElementById("contact").value || "").trim(),
         address: address,
@@ -813,8 +821,14 @@
             return res.json();
           })
           .then(function(result) {
-            alert("您已提交，请等待工作人员联系");
-            showMessage("✅ " + result.message + "，请等待工作人员联系", "success");
+            var reservationNumber = result && result.reservationNumber ? result.reservationNumber : "";
+            if (reservationNumber) {
+              alert("提交成功！\n预约号：" + reservationNumber + "\n请截图保存，用于后续自助修改或取消。");
+              showMessage("✅ " + result.message + "，预约号：" + reservationNumber + "（请截图保存）", "success");
+            } else {
+              alert("您已提交，请等待工作人员联系");
+              showMessage("✅ " + result.message + "，请等待工作人员联系", "success");
+            }
             submit_btn.disabled = false;
             
             // 尝试发送 EmailJS（非必要）
@@ -843,8 +857,14 @@
               try {
                 var result = JSON.parse(xhr.responseText);
                 if (xhr.status === 200 || xhr.status === 201) {
-                  alert("您已提交，请等待工作人员联系");
-                  showMessage("✅ " + result.message + "，请等待工作人员联系", "success");
+                  var reservationNumber = result && result.reservationNumber ? result.reservationNumber : "";
+                  if (reservationNumber) {
+                    alert("提交成功！\n预约号：" + reservationNumber + "\n请截图保存，用于后续自助修改或取消。");
+                    showMessage("✅ " + result.message + "，预约号：" + reservationNumber + "（请截图保存）", "success");
+                  } else {
+                    alert("您已提交，请等待工作人员联系");
+                    showMessage("✅ " + result.message + "，请等待工作人员联系", "success");
+                  }
                   
                   // 尝试发送 EmailJS（非必要）
                   try {
