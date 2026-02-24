@@ -174,6 +174,7 @@
       hideMessage();
       var number = (document.getElementById("lookupReservationNumber").value || "").trim();
       if (!number) {
+        alert("请输入预约号");
         showMessage("请输入预约号", "err");
         return;
       }
@@ -184,7 +185,9 @@
         null,
         function(result) {
           if (!result || !result.success || !result.data) {
-            showMessage((result && result.message) || "未找到预约", "err");
+            var errMsg = "未匹配到预约信息，请核对后再试";
+            alert(errMsg);
+            showMessage(errMsg, "err");
             return;
           }
           goToDetailPage(result.data.reservationNumber || number);
@@ -200,6 +203,7 @@
       var catName = (document.getElementById("findCatName").value || "").trim();
 
       if (!contactType || !contact || !catName) {
+        alert("请填写联系方式类型、联系方式、猫咪名字");
         showMessage("请填写联系方式类型、联系方式、猫咪名字", "err");
         return;
       }
@@ -210,7 +214,9 @@
         { contactType: contactType, contact: contact, catName: catName },
         function(result) {
           if (!result || !result.success || !result.data) {
-            showMessage((result && result.message) || "未找到预约", "err");
+            var errMsg = "未匹配到预约信息，请核对后再试";
+            alert(errMsg);
+            showMessage(errMsg, "err");
             return;
           }
           goToDetailPage(result.data.reservationNumber || "");
