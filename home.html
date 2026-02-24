@@ -1,0 +1,1492 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>猫咪上门看护·安心陪伴服务</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      background: #FFF5F7;
+      overflow-x: hidden;
+    }
+
+    /* 顶部横幅 */
+    .hero {
+      position: relative;
+      height: 400px;
+      background: linear-gradient(135deg, #FFE4E6 0%, #FFC8D3 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(84, 54, 98, 0.16) 0%, rgba(84, 54, 98, 0.1) 45%, rgba(84, 54, 98, 0.2) 100%);
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .sakura-layer {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 2;
+    }
+
+    .sakura-layer::before {
+      content: "";
+      position: absolute;
+      inset: -10% -10% 0 -10%;
+      background:
+        radial-gradient(circle at 20% 18%, rgba(255, 248, 252, 0.45) 0%, rgba(255, 248, 252, 0) 34%),
+        radial-gradient(circle at 78% 24%, rgba(255, 236, 245, 0.38) 0%, rgba(255, 236, 245, 0) 36%),
+        radial-gradient(circle at 50% 70%, rgba(255, 245, 250, 0.22) 0%, rgba(255, 245, 250, 0) 45%);
+      filter: blur(2px);
+    }
+
+    .sakura-layer span {
+      position: absolute;
+      top: -10%;
+      width: 18px;
+      height: 13px;
+      background:
+        radial-gradient(circle at 28% 30%, rgba(255, 255, 255, 0.88) 0%, rgba(255, 255, 255, 0) 50%),
+        linear-gradient(145deg, #fff7fb 0%, #ffd9e6 54%, #f4b1c6 100%);
+      border-radius: 72% 28% 68% 32% / 56% 44% 62% 38%;
+      box-shadow:
+        inset -1px -1px 0 rgba(238, 158, 184, 0.24),
+        0 0 6px rgba(255, 216, 230, 0.75);
+      opacity: 0.75;
+      transform-origin: 25% 60%;
+      animation: sakura-fall 10s linear infinite, sakura-spin 3.2s ease-in-out infinite alternate;
+      backdrop-filter: blur(0.5px);
+    }
+
+    .sakura-layer span::before {
+      content: "";
+      position: absolute;
+      left: 28%;
+      top: 16%;
+      width: 44%;
+      height: 44%;
+      background: rgba(255, 255, 255, 0.62);
+      border-radius: 58% 42% 62% 38%;
+    }
+
+    .sakura-layer span::after {
+      content: "";
+      position: absolute;
+      right: 10%;
+      top: 46%;
+      width: 24%;
+      height: 8%;
+      background: rgba(244, 170, 194, 0.34);
+      border-radius: 999px;
+      transform: rotate(-20deg);
+    }
+
+    .sakura-layer span:nth-child(2n) {
+      width: 14px;
+      height: 10px;
+      opacity: 0.62;
+      animation-duration: 12s;
+    }
+
+    .sakura-layer span:nth-child(3n) {
+      width: 20px;
+      height: 14px;
+      opacity: 0.82;
+      animation-duration: 8.5s;
+    }
+
+    @keyframes sakura-fall {
+      0% {
+        transform: translate3d(0, -28px, 0) rotate(0deg);
+      }
+      50% {
+        transform: translate3d(22px, 220px, 0) rotate(170deg);
+      }
+      100% {
+        transform: translate3d(48px, 470px, 0) rotate(340deg);
+      }
+    }
+
+    @keyframes sakura-spin {
+      0% {
+        margin-left: -6px;
+      }
+      100% {
+        margin-left: 6px;
+      }
+    }
+
+    .hero-image {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 1;
+      z-index: 0;
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 3;
+      text-align: center;
+      color: white;
+      text-shadow: 0 3px 12px rgba(48, 25, 60, 0.6), 0 1px 2px rgba(0, 0, 0, 0.45);
+      background: rgba(88, 56, 102, 0.2);
+      backdrop-filter: blur(2px);
+      border: 1px solid rgba(255, 255, 255, 0.26);
+      border-radius: 14px;
+      padding: 14px 26px;
+    }
+
+    .hero-title {
+      font-size: 32px;
+      font-weight: bold;
+      margin-bottom: 10px;
+      letter-spacing: 2px;
+      -webkit-text-stroke: 0.6px rgba(75, 44, 90, 0.4);
+    }
+
+    .hero-subtitle {
+      font-size: 16px;
+      opacity: 1;
+      color: #fff8ff;
+    }
+
+    .lang-switch {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      z-index: 4;
+      display: inline-block;
+    }
+
+    .lang-trigger {
+      border: 1px solid rgba(255, 182, 193, 0.5);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.9);
+      cursor: pointer;
+      font-size: 14px;
+      color: #6d4b5d;
+      padding: 8px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      backdrop-filter: blur(4px);
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+      min-height: 42px;
+      min-width: 100px;
+    }
+
+    .lang-trigger:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 3px 8px rgba(123, 79, 105, 0.2);
+    }
+
+    .lang-trigger:active {
+      transform: translateY(0);
+    }
+
+    .lang-menu {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      min-width: 150px;
+      background: rgba(255, 255, 255, 0.94);
+      border: 1px solid rgba(255, 182, 193, 0.45);
+      border-radius: 10px;
+      box-shadow: 0 10px 20px rgba(123, 79, 105, 0.16);
+      padding: 6px;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-6px);
+      transition: opacity 0.18s ease, transform 0.18s ease, visibility 0.18s ease;
+      backdrop-filter: blur(6px);
+    }
+
+    .lang-switch:hover .lang-menu,
+    .lang-switch:focus-within .lang-menu {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+
+    .lang-option {
+      width: 100%;
+      border: none;
+      background: transparent;
+      text-align: left;
+      padding: 10px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      color: #6d4b5d;
+      transition: background 0.2s ease;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+      min-height: 40px;
+      display: flex;
+      align-items: center;
+    }
+
+    .lang-option:hover {
+      background: rgba(255, 182, 193, 0.18);
+    }
+
+    .lang-option:active {
+      background: rgba(255, 182, 193, 0.28);
+    }
+
+    .lang-option.active {
+      border-color: #c75b7a;
+      background: rgba(255, 182, 193, 0.24);
+      font-weight: 600;
+    }
+
+    /* 导航图标区域 */
+    .nav-section {
+      background: #FFF0F3;
+      padding: 40px 20px;
+      box-shadow: 0 2px 8px rgba(255, 182, 193, 0.15);
+    }
+
+    .nav-icons {
+      max-width: 900px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: nowrap;
+      gap: 16px;
+    }
+
+    .nav-item {
+      text-align: center;
+      cursor: pointer;
+      transition: transform 0.3s;
+      flex: 0 0 140px;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+      padding: 8px;
+      border-radius: 8px;
+    }
+
+    .nav-item:active {
+      background: rgba(255, 182, 193, 0.2);
+    }
+
+    .nav-item:hover {
+      transform: translateY(-5px);
+    }
+
+    .nav-icon {
+      width: 140px;
+      height: 140px;
+      border-radius: 0;
+      background: #FFE4E8;
+      margin: 0 auto 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 12px rgba(255, 182, 193, 0.2);
+      border: none;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .nav-icon::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: rgba(255, 182, 193, 0.28);
+      mix-blend-mode: soft-light;
+      pointer-events: none;
+    }
+
+    .nav-icon img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+      filter: saturate(0.9) brightness(1.06) contrast(1.02);
+    }
+
+    .nav-img-shopping {
+      object-position: center 100%;
+    }
+
+    .nav-img-services {
+      object-position: center 30%;
+    }
+
+    .nav-icon-placeholder {
+      font-size: 40px;
+      color: white;
+    }
+
+    .nav-label {
+      font-size: 16px;
+      font-weight: bold;
+      color: #C75B7A;
+    }
+
+    /* 音乐播放器控制器 */
+    .music-control {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      background: white;
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(255, 182, 193, 0.3);
+      transition: all 0.3s ease;
+      z-index: 999;
+      border: 2px solid #FFB6C1;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+
+    .music-control:hover {
+      transform: scale(1.1);
+      box-shadow: 0 6px 20px rgba(255, 182, 193, 0.4);
+    }
+
+    .music-control:active {
+      transform: scale(0.95);
+    }
+
+    .music-control-inner {
+      font-size: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .music-control-inner.playing::after {
+      content: '';
+      width: 4px;
+      height: 12px;
+      background: linear-gradient(to top, #FF69B4, #FFB6C1);
+      border-radius: 2px;
+      margin: 0 2px;
+      animation: sound-bar 0.6s ease-in-out infinite;
+    }
+
+    .music-control-inner.playing::before {
+      content: '';
+      width: 4px;
+      height: 8px;
+      background: linear-gradient(to top, #FF69B4, #FFB6C1);
+      border-radius: 2px;
+      margin: 0 2px;
+      animation: sound-bar 0.6s ease-in-out 0.2s infinite;
+    }
+
+    @keyframes sound-bar {
+      0%, 100% { height: 4px; }
+      50% { height: 14px; }
+    }
+
+    .music-control.muted {
+      opacity: 0.6;
+    }
+
+    /* 内容区域 */
+    .content-section {
+      max-width: 900px;
+      margin: 60px auto;
+      padding: 0 20px;
+    }
+
+    .section {
+      background: white;
+      padding: 40px;
+      border-radius: 12px;
+      margin-bottom: 40px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      scroll-margin-top: 20px;
+    }
+
+    .section-title {
+      font-size: 28px;
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 25px;
+      padding-bottom: 15px;
+      border-bottom: 3px solid #FFB6C1;
+      display: inline-block;
+    }
+
+    .section-content {
+      font-size: 16px;
+      line-height: 1.8;
+      color: #555;
+    }
+
+    .section-content p {
+      margin-bottom: 15px;
+    }
+
+    .service-list, .price-list {
+      list-style: none;
+    }
+
+    .service-list li, .price-list li {
+      padding: 12px 0;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      align-items: center;
+    }
+
+    .service-list li:before {
+      content: "🐾";
+      margin-right: 10px;
+      font-size: 18px;
+    }
+
+    .price-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .price-name {
+      font-weight: bold;
+      color: #333;
+    }
+
+    .price-value {
+      color: #FF69B4;
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 15px;
+      margin-top: 20px;
+    }
+
+    .gallery-item {
+      aspect-ratio: 1;
+      background: #FFE4E8;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #C75B7A;
+      font-size: 14px;
+      text-align: center;
+      overflow: hidden;
+    }
+
+    .gallery-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .cta-buttons {
+      display: flex;
+      gap: 15px;
+      margin-top: 25px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      flex: 1;
+      min-width: 200px;
+      padding: 15px 30px;
+      background: #FFB6C1;
+      color: white;
+      text-decoration: none;
+      border-radius: 25px;
+      font-size: 16px;
+      font-weight: bold;
+      text-align: center;
+      transition: all 0.3s;
+      box-shadow: 0 4px 15px rgba(255, 182, 193, 0.3);
+      border: none;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .btn:hover {
+      background: #FF9EAD;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(255, 182, 193, 0.4);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    .btn-secondary {
+      background: #6c757d;
+      box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3);
+    }
+
+    .btn-secondary:hover {
+      background: #5a6268;
+      box-shadow: 0 6px 20px rgba(108, 117, 125, 0.4);
+    }
+
+    /* 底部 */
+    .footer {
+      background: #333;
+      color: white;
+      text-align: center;
+      padding: 30px 20px;
+      margin-top: 60px;
+    }
+
+    .footer-links {
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .footer-link {
+      color: #FFB6C1;
+      text-decoration: none;
+      font-size: 14px;
+      transition: color 0.3s;
+    }
+
+    .footer-link:hover {
+      color: #FFC8D3;
+    }
+
+    .footer-text {
+      font-size: 14px;
+      opacity: 0.8;
+    }
+
+    /* 响应式设计 */
+    
+    /* iPad 和平板 (768px - 1024px) */
+    @media (max-width: 1024px) and (min-width: 769px) {
+      .hero {
+        height: 320px;
+      }
+
+      .hero-title {
+        font-size: 28px;
+      }
+
+      .nav-icons {
+        gap: 12px;
+        padding: 30px 15px;
+      }
+
+      .nav-item {
+        flex: 0 1 120px;
+      }
+
+      .nav-icon {
+        width: 100px;
+        height: 100px;
+      }
+
+      .nav-label {
+        font-size: 13px;
+      }
+
+      .section {
+        padding: 30px;
+      }
+
+      .section-title {
+        font-size: 24px;
+      }
+
+      .music-control {
+        bottom: 20px;
+        right: 20px;
+        width: 55px;
+        height: 55px;
+      }
+
+      .music-control-inner {
+        font-size: 24px;
+      }
+    }
+
+    /* 手机和小设备 (最大 768px) */
+    @media (max-width: 768px) {
+      .hero {
+        height: 280px;
+      }
+
+      .hero-title {
+        font-size: 20px;
+      }
+
+      .hero-subtitle {
+        font-size: 13px;
+      }
+
+      .lang-trigger {
+        font-size: 12px;
+        padding: 6px 10px;
+      }
+
+      .nav-section {
+        padding: 25px 10px;
+      }
+
+      .nav-icons {
+        gap: 8px;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+
+      .nav-item {
+        flex: 0 1 calc(50% - 4px);
+        max-width: 90px;
+      }
+
+      .nav-icon {
+        width: 75px;
+        height: 75px;
+      }
+
+      .nav-label {
+        font-size: 12px;
+        margin-top: 8px;
+      }
+
+      .content-section {
+        margin: 40px auto;
+        padding: 0 15px;
+      }
+
+      .section {
+        padding: 20px;
+        margin-bottom: 25px;
+        border-radius: 8px;
+      }
+
+      .section-title {
+        font-size: 18px;
+        margin-bottom: 15px;
+      }
+
+      .section-content {
+        font-size: 14px;
+        line-height: 1.6;
+      }
+
+      .service-list li,
+      .price-list li {
+        padding: 10px 0;
+        font-size: 13px;
+      }
+
+      .price-item {
+        font-size: 13px;
+      }
+
+      .price-value {
+        font-size: 16px;
+      }
+
+      .gallery {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 10px;
+      }
+
+      .cta-buttons {
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .btn {
+        min-width: 100%;
+        padding: 12px 20px;
+        font-size: 14px;
+      }
+
+      .music-control {
+        bottom: 15px;
+        right: 15px;
+        width: 50px;
+        height: 50px;
+      }
+
+      .music-control-inner {
+        font-size: 22px;
+      }
+
+      .footer {
+        padding: 30px 15px;
+      }
+
+      .footer-links {
+        gap: 10px;
+      }
+
+      .footer-link {
+        font-size: 12px;
+        padding: 8px 12px;
+      }
+
+      .footer-text {
+        font-size: 12px;
+        margin-top: 10px;
+      }
+    }
+
+    /* 小手机 (最大 480px) */
+    @media (max-width: 480px) {
+      * {
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-size: 13px;
+      }
+
+      .hero {
+        height: 220px;
+      }
+
+      .hero-title {
+        font-size: 16px;
+        padding: 10px;
+      }
+
+      .hero-subtitle {
+        font-size: 11px;
+      }
+
+      .lang-trigger {
+        font-size: 11px;
+        padding: 5px 8px;
+        border-radius: 6px;
+      }
+
+      .lang-menu {
+        min-width: 140px;
+      }
+
+      .lang-option {
+        font-size: 11px;
+        padding: 6px;
+      }
+
+      .nav-section {
+        padding: 15px 10px;
+        background: #FFF0F3;
+      }
+
+      .nav-icons {
+        gap: 6px;
+        max-width: 100%;
+      }
+
+      .nav-item {
+        flex: 0 1 calc(33.33% - 4px);
+        max-width: 70px;
+      }
+
+      .nav-icon {
+        width: 60px;
+        height: 60px;
+        margin: 0 auto 8px;
+      }
+
+      .nav-label {
+        font-size: 10px;
+        line-height: 1.2;
+      }
+
+      .content-section {
+        margin: 25px auto;
+        padding: 0 12px;
+      }
+
+      .section {
+        padding: 15px;
+        margin-bottom: 20px;
+        border-radius: 6px;
+      }
+
+      .section-title {
+        font-size: 16px;
+        margin-bottom: 12px;
+        padding-bottom: 8px;
+        border-color: #FFB6C1;
+      }
+
+      .section-content {
+        font-size: 12px;
+        line-height: 1.5;
+      }
+
+      .section-content p {
+        margin-bottom: 10px;
+      }
+
+      .service-list li,
+      .price-list li {
+        padding: 8px 0;
+        font-size: 12px;
+        display: flex;
+        align-items: center;
+      }
+
+      .service-list li:before {
+        margin-right: 8px;
+        font-size: 14px;
+      }
+
+      .price-item {
+        font-size: 12px;
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .price-name {
+        margin-bottom: 4px;
+      }
+
+      .price-value {
+        font-size: 14px;
+        color: #FF69B4;
+      }
+
+      .gallery {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 8px;
+      }
+
+      .gallery-item {
+        font-size: 11px;
+      }
+
+      .cta-buttons {
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .btn {
+        min-width: 100%;
+        padding: 10px 16px;
+        font-size: 12px;
+        border-radius: 20px;
+      }
+
+      .btn:hover {
+        transform: translateY(-1px);
+      }
+
+      .music-control {
+        bottom: 12px;
+        right: 12px;
+        width: 48px;
+        height: 48px;
+      }
+
+      .music-control-inner {
+        font-size: 20px;
+      }
+
+      .footer {
+        padding: 20px 12px;
+      }
+
+      .footer-links {
+        flex-wrap: wrap;
+        gap: 8px;
+        row-gap: 6px;
+      }
+
+      .footer-link {
+        font-size: 11px;
+        padding: 6px 10px;
+      }
+
+      .footer-text {
+        font-size: 11px;
+        margin-top: 8px;
+      }
+    }
+
+    /* 平滑滚动 */
+    html {
+      scroll-behavior: smooth;
+    }
+  </style>
+</head>
+<body>
+  <!-- 顶部横幅 -->
+  <section class="hero">
+    <img src="images/hero-sakura2.jpg" alt="樱花背景" class="hero-image">
+    <div class="lang-switch" aria-label="Language selector">
+      <button type="button" class="lang-trigger" aria-haspopup="true">🌐 语言 / Language</button>
+      <div class="lang-menu" role="menu">
+        <button type="button" class="lang-option" data-lang="zh" role="menuitem">🇨🇳 中文</button>
+        <button type="button" class="lang-option" data-lang="en" role="menuitem">🇺🇸 English</button>
+        <button type="button" class="lang-option" data-lang="ja" role="menuitem">🇯🇵 日本語</button>
+      </div>
+    </div>
+    <div class="sakura-layer" aria-hidden="true">
+      <span style="left: 6%; animation-delay: 0s;"></span>
+      <span style="left: 14%; animation-delay: 2s;"></span>
+      <span style="left: 22%; animation-delay: 4s;"></span>
+      <span style="left: 30%; animation-delay: 1s;"></span>
+      <span style="left: 38%; animation-delay: 3s;"></span>
+      <span style="left: 46%; animation-delay: 5s;"></span>
+      <span style="left: 54%; animation-delay: 1.5s;"></span>
+      <span style="left: 62%; animation-delay: 3.5s;"></span>
+      <span style="left: 70%; animation-delay: 0.5s;"></span>
+      <span style="left: 78%; animation-delay: 2.5s;"></span>
+      <span style="left: 86%; animation-delay: 4.5s;"></span>
+      <span style="left: 94%; animation-delay: 1.2s;"></span>
+    </div>
+    <div class="hero-content">
+      <h1 class="hero-title" data-i18n="heroTitle">猫咪上门看护·安心陪伴服务</h1>
+      <p class="hero-subtitle" data-i18n="heroSubtitle">专业、贴心、值得信赖</p>
+    </div>
+  </section>
+
+  <!-- 导航图标 -->
+  <section class="nav-section">
+    <div class="nav-icons">
+      <div class="nav-item" onclick="scrollToSection('services')">
+        <div class="nav-icon">
+          <img class="nav-img-services" src="images/服务项目.jpg" alt="服务项目">
+        </div>
+        <div class="nav-label" data-i18n="navServices">服务项目</div>
+      </div>
+
+      <div class="nav-item" onclick="scrollToSection('pricing')">
+        <div class="nav-icon">
+          <img src="images/价格.jpg" alt="价格">
+        </div>
+        <div class="nav-label" data-i18n="navPricing">价格</div>
+      </div>
+
+      <div class="nav-item" onclick="scrollToSection('gallery')">
+        <div class="nav-icon">
+          <img src="images/实拍案例.jpg" alt="实拍案例">
+        </div>
+        <div class="nav-label" data-i18n="navGallery">实拍案例</div>
+      </div>
+
+      <div class="nav-item" onclick="scrollToSection('booking')">
+        <div class="nav-icon">
+          <img src="images/预约方式.jpg" alt="预约方式">
+        </div>
+        <div class="nav-label" data-i18n="navBooking">预约方式</div>
+      </div>
+
+      <div class="nav-item" onclick="scrollToSection('shopping')">
+        <div class="nav-icon">
+          <img class="nav-img-shopping" src="images/购物.jpg" alt="购物">
+        </div>
+        <div class="nav-label" data-i18n="navShopping">购物</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 音乐播放器 -->
+  <audio id="bgMusic" preload="auto" loop>
+    <source src="/uploads/bgmusic.mp3" type="audio/mpeg">
+    您的浏览器不支持音频播放器
+  </audio>
+
+  <!-- 音乐控制按钮 -->
+  <div class="music-control" id="musicControl" title="点击播放/暂停" onclick="toggleMusic()">
+    <div class="music-control-inner" id="musicIcon">🎵</div>
+  </div>
+
+  <!-- 主要内容区域 -->
+  <div class="content-section">
+    <!-- 服务项目 -->
+    <section id="services" class="section">
+      <h2 class="section-title" data-i18n="sectionServices">服务项目</h2>
+      <div class="section-content">
+        <p data-i18n="servicesIntro">提供全方位的猫咪上门看护服务：</p>
+        <ul class="service-list">
+          <li data-i18n="service1">每日喂食喂水，确保猫咪饮食规律</li>
+          <li data-i18n="service2">清理猫砂盆，保持环境卫生</li>
+          <li data-i18n="service3">陪伴玩耍互动，缓解猫咪孤独</li>
+          <li data-i18n="service4">健康观察记录，及时反馈状态</li>
+          <li data-i18n="service5">拍照视频分享，让您随时了解爱猫情况</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 价格 -->
+    <section id="pricing" class="section">
+      <h2 class="section-title" data-i18n="sectionPricing">价格</h2>
+      <div class="section-content">
+        <p data-i18n="pricingIntro">透明合理的收费标准：</p>
+        <ul class="price-list">
+          <li>
+            <div class="price-item">
+              <span class="price-name" data-i18n="price1Name">一日单次</span>
+              <span class="price-value" data-i18n="price1Value">1800円</span>
+            </div>
+          </li>
+          <li>
+            <div class="price-item">
+              <span class="price-name" data-i18n="price2Name">每日1次上门（7天起）</span>
+              <span class="price-value" data-i18n="price2Value">1700円</span>
+            </div>
+          </li>
+          <li>
+            <div class="price-item">
+              <span class="price-name" data-i18n="price3Name">长期包月服务（30天）</span>
+              <span class="price-value" data-i18n="price3Value">48000円</span>
+            </div>
+          </li>
+        </ul>
+        <p style="margin-top: 20px; color: #888; font-size: 14px;">
+          <span data-i18n="priceNote1">* 多只猫加收500円</span><br>
+          <span data-i18n="priceNote2">* 路费实报实销</span>
+        </p>
+      </div>
+    </section>
+
+    <!-- 实拍案例 -->
+    <section id="gallery" class="section">
+      <h2 class="section-title" data-i18n="sectionGallery">实拍案例</h2>
+      <div class="section-content">
+        <p data-i18n="galleryIntro">这些是我照顾过的可爱小客人们：</p>
+        <div class="gallery">
+          <div class="gallery-item">
+            <!-- <img src="cat1.jpg" alt="案例1"> -->
+            <span data-i18n="galleryCase1">猫咪案例 1</span>
+          </div>
+          <div class="gallery-item">
+            <!-- <img src="cat2.jpg" alt="案例2"> -->
+            <span data-i18n="galleryCase2">猫咪案例 2</span>
+          </div>
+          <div class="gallery-item">
+            <!-- <img src="cat3.jpg" alt="案例3"> -->
+            <span data-i18n="galleryCase3">猫咪案例 3</span>
+          </div>
+          <div class="gallery-item">
+            <!-- <img src="cat4.jpg" alt="案例4"> -->
+            <span data-i18n="galleryCase4">猫咪案例 4</span>
+          </div>
+          <div class="gallery-item">
+            <!-- <img src="cat5.jpg" alt="案例5"> -->
+            <span data-i18n="galleryCase5">猫咪案例 5</span>
+          </div>
+          <div class="gallery-item">
+            <!-- <img src="cat6.jpg" alt="案例6"> -->
+            <span data-i18n="galleryCase6">猫咪案例 6</span>
+          </div>
+        </div>
+        <p style="margin-top: 20px; color: #888; font-size: 14px;">
+          <span data-i18n="galleryNote1">* 图片均已获得主人授权发布</span><br>
+          <span data-i18n="galleryNote2">* 可提供更多真实案例照片和客户评价</span>
+        </p>
+      </div>
+    </section>
+
+    <!-- 预约方式 -->
+    <section id="booking" class="section">
+      <h2 class="section-title" data-i18n="sectionBooking">预约方式</h2>
+      <div class="section-content">
+        <p data-i18n="bookingIntro">开始预约您的猫咪看护服务：</p>
+        <div class="cta-buttons">
+          <a href="index.html" class="btn" data-i18n="bookNow">立即预约</a>
+          <a href="manage-appointment.html" class="btn btn-secondary" data-i18n="manageBooking">查询/修改预约</a>
+        </div>
+        <p style="margin-top: 25px; line-height: 1.8;">
+          <strong data-i18n="bookingProcessTitle">预约流程：</strong><br>
+          <span data-i18n="bookingStep1">1. 点击"立即预约"填写服务信息</span><br>
+          <span data-i18n="bookingStep2">2. 我们会在24小时内联系您确认</span><br>
+          <span data-i18n="bookingStep3">3. 首次服务前会上门沟通详细需求</span><br>
+          <span data-i18n="bookingStep4">4. 服务期间每日发送猫咪状态更新</span><br>
+          <span data-i18n="bookingStep5">5. 服务结束后欢迎反馈和评价</span>
+        </p>
+      </div>
+    </section>
+
+    <!-- 购物 -->
+    <section id="shopping" class="section">
+      <h2 class="section-title" data-i18n="sectionShopping">购物</h2>
+      <div class="section-content">
+        <p data-i18n="shoppingIntro">为您的猫咪选购优质用品：</p>
+        <ul class="service-list">
+          <li data-i18n="shopping1">猫粮、罐头、零食等食品</li>
+          <li data-i18n="shopping2">猫砂、猫砂盆及清洁用品</li>
+          <li data-i18n="shopping3">猫抓板、猫爬架等玩具</li>
+          <li data-i18n="shopping4">猫窝、猫包等生活用品</li>
+          <li data-i18n="shopping5">梳毛工具、指甲剪等护理用品</li>
+          <li data-i18n="shopping6">猫咪保健品、驱虫药等</li>
+        </ul>
+        <div class="cta-buttons" style="margin-top: 25px;">
+          <a href="#" class="btn" data-i18n="goShop" onclick="alert((window.I18N && window.I18N[window.currentLang || 'zh'] && window.I18N[window.currentLang || 'zh'].shopSoon) || '购物功能即将上线，敬请期待！'); return false;">前往商城</a>
+        </div>
+        <p style="margin-top: 25px; line-height: 1.8;">
+          <strong data-i18n="shoppingBenefitsTitle">购物优势：</strong><br>
+          <span data-i18n="shoppingBenefit1">✓ 精选优质品牌，品质保证</span><br>
+          <span data-i18n="shoppingBenefit2">✓ 预约客户专享优惠</span><br>
+          <span data-i18n="shoppingBenefit3">✓ 提供专业选购建议</span><br>
+          <span data-i18n="shoppingBenefit4">✓ 支持配送上门服务</span><br>
+          <span data-i18n="shoppingBenefit5">✓ 不满意可退换货</span>
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 底部 -->
+  <footer class="footer">
+    <div class="footer-links">
+      <a href="manage-appointment.html" class="footer-link" data-i18n="customerEntry">客户查询入口</a>
+      <a href="submissions.html" class="footer-link" data-i18n="adminEntry">管理员入口</a>
+    </div>
+    <div class="footer-text">
+      <span data-i18n="footerText">© 2026 猫咪上门看护服务 · 用心陪伴每一只小猫咪</span>
+    </div>
+  </footer>
+
+  <script>
+    window.I18N = {
+      zh: {
+        pageTitle: "猫咪上门看护·安心陪伴服务",
+        heroTitle: "猫咪上门看护·安心陪伴服务",
+        heroSubtitle: "专业、贴心、值得信赖",
+        navServices: "服务项目",
+        navPricing: "价格",
+        navGallery: "实拍案例",
+        navBooking: "预约方式",
+        navShopping: "购物",
+        sectionServices: "服务项目",
+        sectionPricing: "价格",
+        sectionGallery: "实拍案例",
+        sectionBooking: "预约方式",
+        sectionShopping: "购物",
+        servicesIntro: "提供全方位的猫咪上门看护服务：",
+        service1: "每日喂食喂水，确保猫咪饮食规律",
+        service2: "清理猫砂盆，保持环境卫生",
+        service3: "陪伴玩耍互动，缓解猫咪孤独",
+        service4: "健康观察记录，及时反馈状态",
+        service5: "拍照视频分享，让您随时了解爱猫情况",
+        pricingIntro: "透明合理的收费标准：",
+        price1Name: "一日单次",
+        price1Value: "1800円",
+        price2Name: "每日1次上门（7天起）",
+        price2Value: "1700円",
+        price3Name: "长期包月服务（30天）",
+        price3Value: "48000円",
+        priceNote1: "* 多只猫加收500円",
+        priceNote2: "* 路费实报实销",
+        galleryIntro: "这些是我照顾过的可爱小客人们：",
+        galleryCase1: "猫咪案例 1",
+        galleryCase2: "猫咪案例 2",
+        galleryCase3: "猫咪案例 3",
+        galleryCase4: "猫咪案例 4",
+        galleryCase5: "猫咪案例 5",
+        galleryCase6: "猫咪案例 6",
+        galleryNote1: "* 图片均已获得主人授权发布",
+        galleryNote2: "* 可提供更多真实案例照片和客户评价",
+        bookingIntro: "开始预约您的猫咪看护服务：",
+        bookNow: "立即预约",
+        manageBooking: "查询/修改预约",
+        bookingProcessTitle: "预约流程：",
+        bookingStep1: "1. 点击'立即预约'填写服务信息",
+        bookingStep2: "2. 我们会在24小时内联系您确认",
+        bookingStep3: "3. 首次服务前会上门沟通详细需求",
+        bookingStep4: "4. 服务期间每日发送猫咪状态更新",
+        bookingStep5: "5. 服务结束后欢迎反馈和评价",
+        shoppingIntro: "为您的猫咪选购优质用品：",
+        shopping1: "猫粮、罐头、零食等食品",
+        shopping2: "猫砂、猫砂盆及清洁用品",
+        shopping3: "猫抓板、猫爬架等玩具",
+        shopping4: "猫窝、猫包等生活用品",
+        shopping5: "梳毛工具、指甲剪等护理用品",
+        shopping6: "猫咪保健品、驱虫药等",
+        goShop: "前往商城",
+        shoppingBenefitsTitle: "购物优势：",
+        shoppingBenefit1: "✓ 精选优质品牌，品质保证",
+        shoppingBenefit2: "✓ 预约客户专享优惠",
+        shoppingBenefit3: "✓ 提供专业选购建议",
+        shoppingBenefit4: "✓ 支持配送上门服务",
+        shoppingBenefit5: "✓ 不满意可退换货",
+        customerEntry: "客户查询入口",
+        adminEntry: "管理员入口",
+        footerText: "© 2026 猫咪上门看护服务 · 用心陪伴每一只小猫咪",
+        shopSoon: "购物功能即将上线，敬请期待！"
+      },
+      en: {
+        pageTitle: "Cat Home Visit Care · Trusted Companion Service",
+        heroTitle: "Cat Home Visit Care · Trusted Companion Service",
+        heroSubtitle: "Professional, Caring, and Reliable",
+        navServices: "Services",
+        navPricing: "Pricing",
+        navGallery: "Gallery",
+        navBooking: "Booking",
+        navShopping: "Shop",
+        sectionServices: "Services",
+        sectionPricing: "Pricing",
+        sectionGallery: "Gallery",
+        sectionBooking: "Booking",
+        sectionShopping: "Shop",
+        servicesIntro: "We provide comprehensive home visit care services for your cats:",
+        service1: "Daily feeding and hydration to maintain regular cat meals",
+        service2: "Litter box cleaning and maintaining hygiene",
+        service3: "Playtime and interaction to alleviate loneliness",
+        service4: "Health observation and prompt status feedback",
+        service5: "Photos and videos to keep you updated on your pet",
+        pricingIntro: "Transparent and reasonable pricing:",
+        price1Name: "Single visit",
+        price1Value: "1800 JPY",
+        price2Name: "Daily visit (7+ days)",
+        price2Value: "1700 JPY",
+        price3Name: "Monthly package (30 days)",
+        price3Value: "48000 JPY",
+        priceNote1: "* Additional ¥500 per extra cat",
+        priceNote2: "* Travel fee billed separately",
+        galleryIntro: "Here are the adorable clients I've cared for:",
+        galleryCase1: "Cat Case 1",
+        galleryCase2: "Cat Case 2",
+        galleryCase3: "Cat Case 3",
+        galleryCase4: "Cat Case 4",
+        galleryCase5: "Cat Case 5",
+        galleryCase6: "Cat Case 6",
+        galleryNote1: "* All photos are authorized for publication by owners",
+        galleryNote2: "* More real cases and customer reviews available upon request",
+        bookingIntro: "Start booking your cat care service:",
+        bookNow: "Book Now",
+        manageBooking: "Find / Edit Booking",
+        bookingProcessTitle: "Booking Process:",
+        bookingStep1: "1. Click 'Book Now' to fill in your service information",
+        bookingStep2: "2. We will contact you within 24 hours to confirm",
+        bookingStep3: "3. Home visit before first service to discuss details",
+        bookingStep4: "4. Daily status updates about your cat during service",
+        bookingStep5: "5. Feedback and reviews welcome after service",
+        shoppingIntro: "Pick quality products for your cat:",
+        shopping1: "Cat food, canned food, treats and other food items",
+        shopping2: "Cat litter, litter boxes and cleaning supplies",
+        shopping3: "Scratching posts and cat trees for play",
+        shopping4: "Cat beds, carriers and living supplies",
+        shopping5: "Grooming tools, nail clippers and care items",
+        shopping6: "Cat supplements, deworming products and more",
+        goShop: "Go to Shop",
+        shoppingBenefitsTitle: "Shopping Advantages:",
+        shoppingBenefit1: "✓ Premium brand selection with quality guarantee",
+        shoppingBenefit2: "✓ Special discounts for booking customers",
+        shoppingBenefit3: "✓ Professional shopping advice",
+        shoppingBenefit4: "✓ Door-to-door delivery service",
+        shoppingBenefit5: "✓ Returns and exchanges available",
+        customerEntry: "Customer Portal",
+        adminEntry: "Admin Portal",
+        footerText: "© 2026 Cat Home Visit Care · Caring for Every Cat with Love",
+        shopSoon: "Shopping features are coming soon. Stay tuned!"
+      },
+      ja: {
+        pageTitle: "猫の訪問ケア・安心サポートサービス",
+        heroTitle: "猫の訪問ケア・安心サポートサービス",
+        heroSubtitle: "丁寧・安心・信頼できるサービス",
+        navServices: "サービス",
+        navPricing: "料金",
+        navGallery: "実例",
+        navBooking: "予約方法",
+        navShopping: "ショップ",
+        sectionServices: "サービス",
+        sectionPricing: "料金",
+        sectionGallery: "実例",
+        sectionBooking: "予約方法",
+        sectionShopping: "ショップ",
+        servicesIntro: "猫ちゃんの総合的な訪問ケアサービスをご提供します：",
+        service1: "毎日の食事と水やりで、猫ちゃんの食習慣を管理",
+        service2: "トイレの掃除と清潔維持",
+        service3: "遊びと交流で、猫ちゃんの孤独を和らげます",
+        service4: "健康を観察し、状態を速やかにご報告",
+        service5: "写真と動画で、いつでも猫ちゃんの様子をお知らせ",
+        pricingIntro: "透明で合理的な料金体系：",
+        price1Name: "1回の訪問",
+        price1Value: "1800円",
+        price2Name: "1日1回の訪問（7日以上）",
+        price2Value: "1700円",
+        price3Name: "長期月額パッケージ（30日）",
+        price3Value: "48000円",
+        priceNote1: "* 追加の猫1匹につき500円",
+        priceNote2: "* 移動費は実費清算",
+        galleryIntro: "お世話してきた可愛い猫ちゃんたちです：",
+        galleryCase1: "猫の実例 1",
+        galleryCase2: "猫の実例 2",
+        galleryCase3: "猫の実例 3",
+        galleryCase4: "猫の実例 4",
+        galleryCase5: "猫の実例 5",
+        galleryCase6: "猫の実例 6",
+        galleryNote1: "* すべての写真は飼い主の許可を受けて掲載しています",
+        galleryNote2: "* より多くの実例写真とお客様評価をご用意できます",
+        bookingIntro: "猫ケアサービスの予約をしましょう：",
+        bookNow: "今すぐ予約",
+        manageBooking: "予約照会 / 変更",
+        bookingProcessTitle: "予約プロセス：",
+        bookingStep1: "1. 「今すぐ予約」をクリックしてサービス情報を入力",
+        bookingStep2: "2. 24時間以内にご連絡して確認させていただきます",
+        bookingStep3: "3. 初回サービス前に詳細要件について訪問相談",
+        bookingStep4: "4. サービス期間中は毎日猫ちゃんの状態をアップデート",
+        bookingStep5: "5. サービス終了後のご意見・ご評価をお待ちしています",
+        shoppingIntro: "猫ちゃん向けの良質な商品を選びましょう：",
+        shopping1: "猫用フード、缶詰、おやつなどの食品",
+        shopping2: "猫砂、猫砂盆、清掃用品",
+        shopping3: "爪研ぎ、キャットツリーなどのおもちゃ",
+        shopping4: "猫ベッド、キャリーバッグなどの日用品",
+        shopping5: "グルーミングツール、爪切りなどのケア用品",
+        shopping6: "猫用サプリ、駆虫薬など",
+        goShop: "ショップへ",
+        shoppingBenefitsTitle: "ショッピング利点：",
+        shoppingBenefit1: "✓ 厳選プレミアムブランド、品質保証",
+        shoppingBenefit2: "✓ 予約顧客向けの特別割引",
+        shoppingBenefit3: "✓ 専門的なショッピングアドバイス",
+        shoppingBenefit4: "✓ 配送サービス対応",
+        shoppingBenefit5: "✓ 返品交換可能",
+        customerEntry: "お客様窓口",
+        adminEntry: "管理者入口",
+        footerText: "© 2026 猫の訪問ケアサービス · すべての猫にやさしさを",
+        shopSoon: "ショップ機能は近日公開予定です。お楽しみに！"
+      }
+    };
+
+    window.currentLang = localStorage.getItem("homeLang") || "zh";
+
+    function applyLanguage(lang) {
+      var dict = window.I18N[lang] || window.I18N.zh;
+      window.currentLang = lang;
+      document.documentElement.lang = lang === "zh" ? "zh-CN" : lang;
+      document.title = dict.pageTitle;
+
+      var nodes = document.querySelectorAll("[data-i18n]");
+      nodes.forEach(function(node) {
+        var key = node.getAttribute("data-i18n");
+        if (dict[key]) node.textContent = dict[key];
+      });
+
+      var buttons = document.querySelectorAll(".lang-option");
+      buttons.forEach(function(btn) {
+        btn.classList.toggle("active", btn.getAttribute("data-lang") === lang);
+      });
+      localStorage.setItem("homeLang", lang);
+    }
+
+    // 平滑滚动到指定区域
+    function scrollToSection(sectionId) {
+      const element = document.getElementById(sectionId);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+
+    // 音乐播放控制
+    var isPlaying = false;
+    var isMuted = localStorage.getItem('musicMuted') === 'true';
+
+    function toggleMusic() {
+      var audio = document.getElementById('bgMusic');
+      var control = document.getElementById('musicControl');
+      var icon = document.getElementById('musicIcon');
+
+      if (audio.paused) {
+        audio.play().catch(function(e) {
+          console.log('音乐播放失败：可能是没有配置正确的音频URL', e);
+          alert('📻 配乐需要配置有效的音频文件URL');
+        });
+        isPlaying = true;
+      } else {
+        audio.pause();
+        isPlaying = false;
+      }
+
+      updateMusicUI();
+    }
+
+    function toggleMute() {
+      var control = document.getElementById('musicControl');
+      isMuted = !isMuted;
+      localStorage.setItem('musicMuted', isMuted);
+      updateMusicUI();
+    }
+
+    function updateMusicUI() {
+      var control = document.getElementById('musicControl');
+      var icon = document.getElementById('musicIcon');
+
+      if (isPlaying) {
+        icon.classList.add('playing');
+      } else {
+        icon.classList.remove('playing');
+      }
+
+      if (isMuted) {
+        control.classList.add('muted');
+      } else {
+        control.classList.remove('muted');
+      }
+    }
+
+    // 鼠标悬停显示提示
+    document.addEventListener('DOMContentLoaded', function() {
+      var musicControl = document.getElementById('musicControl');
+      if (musicControl) {
+        musicControl.addEventListener('contextmenu', function(e) {
+          e.preventDefault();
+          toggleMute();
+        });
+      }
+      
+      updateMusicUI();
+      if (!isMuted) {
+        var audio = document.getElementById('bgMusic');
+        audio.volume = 0.3;
+      }
+    });
+
+    document.addEventListener("DOMContentLoaded", function() {
+      var buttons = document.querySelectorAll(".lang-option");
+      buttons.forEach(function(btn) {
+        btn.addEventListener("click", function() {
+          applyLanguage(this.getAttribute("data-lang"));
+        });
+      });
+      applyLanguage(window.currentLang);
+    });
+  </script>
+</body>
+</html>
