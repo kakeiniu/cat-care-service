@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>自助修改/取消预约</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      background: #f5f5f5;
+      color: #222;
+    }
+    .container {
+      max-width: 760px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      padding: 20px;
+    }
+    h1 {
+      margin: 0 0 10px;
+      font-size: 24px;
+    }
+    .desc {
+      margin: 0 0 14px;
+      color: #666;
+      font-size: 14px;
+    }
+    .section {
+      border: 1px solid #e6e6e6;
+      border-radius: 8px;
+      padding: 14px;
+      margin-bottom: 14px;
+      background: #fafafa;
+    }
+    label {
+      display: block;
+      margin-top: 10px;
+      font-weight: 600;
+    }
+    input, textarea, select {
+      width: 100%;
+      margin-top: 5px;
+      padding: 9px;
+      border: 1px solid #d6d6d6;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+    textarea { min-height: 90px; resize: vertical; }
+    .row {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+      flex-wrap: wrap;
+    }
+    button {
+      border: none;
+      border-radius: 6px;
+      background: #4caf50;
+      color: #fff;
+      padding: 9px 14px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    button:hover { background: #45a049; }
+    .danger { background: #d9534f; }
+    .danger:hover { background: #c9302c; }
+    .message {
+      margin-top: 10px;
+      border-radius: 6px;
+      padding: 10px;
+      display: none;
+      font-size: 14px;
+    }
+    .ok { background: #eaf6ea; color: #2f6f33; border: 1px solid #cfe8d1; }
+    .err { background: #fdecec; color: #a32626; border: 1px solid #f2bcbc; }
+    .tip {
+      margin-top: 8px;
+      color: #777;
+      font-size: 12px;
+    }
+    .hide { display: none; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>自助修改 / 取消预约</h1>
+    <p class="desc">可通过预约号直接查找；若忘记预约号，可用联系方式类型 + 联系方式 + 猫咪名字找回。</p>
+
+    <div class="section">
+      <strong>方式一：使用预约号</strong>
+      <label>预约号</label>
+      <input id="lookupReservationNumber" placeholder="例如：YY202602230123" />
+      <div class="row">
+        <button type="button" id="findByReservationBtn">查找预约</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <strong>方式二：忘记预约号（找回）</strong>
+      <label>联系方式类型</label>
+      <select id="findContactType">
+        <option value="">-- 请选择 --</option>
+        <option value="电话">电话</option>
+        <option value="微信">微信</option>
+        <option value="邮箱">邮箱</option>
+      </select>
+      <label>联系方式</label>
+      <input id="findContact" placeholder="请输入提交时填写的联系方式" />
+      <label>猫咪名字</label>
+      <input id="findCatName" placeholder="请输入猫咪名字" />
+      <div class="row">
+        <button type="button" id="findByInfoBtn">找回预约</button>
+      </div>
+      <div class="tip">联系方式类型和联系方式需与提交时一致，系统将匹配最近一条未取消记录。</div>
+    </div>
+
+    <div id="message" class="message"></div>
+  </div>
+
+  <script>
+    function showMessage(text, type) {
+      var box = document.getElementById("message");
+      box.className = "message " + (type === "ok" ? "ok" : "err");
+      box.textContent = text;
+      box.style.display = "block";
+    }
+
+    function hideMessage() {
+      var box = document.getElementById("message");
+      box.style.display = "none";
+    }
+
+    function goToDetailPage(reservationNumber) {
+      if (!reservationNumber) return;
+      window.location.href = "/manage-appointment-detail.html?reservationNumber=" + encodeURIComponent(reservationNumber);
+    }
+
+    function requestJson(url, method, body, success, failure) {
+      if (typeof fetch !== "undefined") {
+        fetch(url, {
+          method: method,
+          headers: { "Content-Type": "application/json" },
+          body: body ? JSON.stringify(body) : undefined,
+          cache: "no-store"
+        })
+          .then(function(res) { return res.json(); })
+          .then(success)
+          .catch(function() { failure("网络错误，请重试"); });
+      } else {
+        var xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function() {
+          if (xhr.readyState === 4) {
+            try {
+              var json = JSON.parse(xhr.responseText || "{}");
+              success(json);
+            } catch (e) {
+              failure("网络错误，请重试");
+            }
+          }
+        };
+        xhr.onerror = function() { failure("网络错误，请重试"); };
+        xhr.open(method, url);
+        xhr.setRequestHeader("Content-Type", "application/json");
+        xhr.send(body ? JSON.stringify(body) : null);
+      }
+    }
+
+    function findByReservation() {
+      hideMessage();
+      var number = (document.getElementById("lookupReservationNumber").value || "").trim();
+      if (!number) {
+        showMessage("请输入预约号", "err");
+        return;
+      }
+
+      requestJson(
+        "/api/customer/appointment/" + encodeURIComponent(number) + "?t=" + Date.now(),
+        "GET",
+        null,
+        function(result) {
+          if (!result || !result.success || !result.data) {
+            showMessage((result && result.message) || "未找到预约", "err");
+            return;
+          }
+          goToDetailPage(result.data.reservationNumber || number);
+        },
+        function(msg) { showMessage(msg, "err"); }
+      );
+    }
+
+    function findByInfo() {
+      hideMessage();
+      var contactType = (document.getElementById("findContactType").value || "").trim();
+      var contact = (document.getElementById("findContact").value || "").trim();
+      var catName = (document.getElementById("findCatName").value || "").trim();
+
+      if (!contactType || !contact || !catName) {
+        showMessage("请填写联系方式类型、联系方式、猫咪名字", "err");
+        return;
+      }
+
+      requestJson(
+        "/api/customer/find?t=" + Date.now(),
+        "POST",
+        { contactType: contactType, contact: contact, catName: catName },
+        function(result) {
+          if (!result || !result.success || !result.data) {
+            showMessage((result && result.message) || "未找到预约", "err");
+            return;
+          }
+          goToDetailPage(result.data.reservationNumber || "");
+        },
+        function(msg) { showMessage(msg, "err"); }
+      );
+    }
+
+    document.getElementById("findByReservationBtn").onclick = findByReservation;
+    document.getElementById("findByInfoBtn").onclick = findByInfo;
+  </script>
+</body>
+</html>

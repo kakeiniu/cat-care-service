@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>预约详情修改</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      background: #f5f5f5;
+      color: #222;
+    }
+    .container {
+      max-width: 760px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      padding: 20px;
+    }
+    h1 {
+      margin: 0 0 10px;
+      font-size: 24px;
+    }
+    label {
+      display: block;
+      margin-top: 10px;
+      font-weight: 600;
+    }
+    input, textarea, select {
+      width: 100%;
+      margin-top: 5px;
+      padding: 9px;
+      border: 1px solid #d6d6d6;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+    textarea { min-height: 90px; resize: vertical; }
+    .date-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-top: 5px;
+      flex-wrap: wrap;
+    }
+    .date-row input[type="date"] { flex: 1 1 180px; }
+    .date-help {
+      margin-top: 8px;
+      color: #777;
+      font-size: 12px;
+    }
+    .visit-list {
+      margin-top: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .visit-row {
+      display: grid;
+      grid-template-columns: 130px 1fr auto;
+      gap: 8px;
+      align-items: center;
+    }
+    .visit-date {
+      font-size: 14px;
+      color: #333;
+      font-weight: 600;
+    }
+    .small-btn {
+      border: none;
+      border-radius: 6px;
+      background: #4caf50;
+      color: #fff;
+      padding: 8px 10px;
+      font-size: 13px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .small-btn:hover { background: #45a049; }
+    .danger-btn { background: #d9534f; }
+    .danger-btn:hover { background: #c9302c; }
+    .row {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+      flex-wrap: wrap;
+    }
+    button {
+      border: none;
+      border-radius: 6px;
+      background: #4caf50;
+      color: #fff;
+      padding: 9px 14px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    button:hover { background: #45a049; }
+    .danger { background: #d9534f; }
+    .danger:hover { background: #c9302c; }
+    .ghost {
+      background: #f1f1f1;
+      color: #666;
+      border: 1px solid #d9d9d9;
+    }
+    .ghost:hover { background: #e7e7e7; }
+    .message {
+      margin-top: 10px;
+      border-radius: 6px;
+      padding: 10px;
+      display: none;
+      font-size: 14px;
+    }
+    .ok { background: #eaf6ea; color: #2f6f33; border: 1px solid #cfe8d1; }
+    .err { background: #fdecec; color: #a32626; border: 1px solid #f2bcbc; }
+    .tip {
+      margin-top: 8px;
+      color: #777;
+      font-size: 12px;
+    }
+    @media (max-width: 640px) {
+      .visit-row {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>预约详情修改</h1>
+    <div class="tip">可修改基础信息与上门日期时间，或取消预约。</div>
+
+    <label>预约号</label>
+    <input id="editReservationNumber" readonly />
+    <label>客户姓名</label>
+    <input id="editOwnerName" />
+    <label>联系方式</label>
+    <input id="editContact" />
+    <label>猫咪名字</label>
+    <input id="editCatName" />
+    <label>猫咪年龄</label>
+    <input id="editCatAge" />
+    <label>地址</label>
+    <textarea id="editAddress"></textarea>
+
+    <label>预约方式</label>
+    <select id="bookingMode" onchange="onBookingModeChange()">
+      <option value="separate">分开日期（不连续）</option>
+      <option value="range">一段区间（连续）</option>
+    </select>
+
+    <div id="separateDateSection">
+      <label>服务日期（分开添加）</label>
+      <div class="date-row">
+        <input type="date" id="date" />
+        <button type="button" class="small-btn" id="addSingleDateBtn">添加日期</button>
+      </div>
+    </div>
+
+    <div id="rangeDateSection" style="display: none;">
+      <label>服务日期区间</label>
+      <div class="date-row">
+        <input type="date" id="startDate" />
+        <input type="date" id="endDate" />
+        <button type="button" class="small-btn" id="addDateRangeBtn">添加区间</button>
+      </div>
+    </div>
+
+    <div class="date-help">添加后请为每个日期分别选择上门时间；区间修改时会保留重叠日期的时间设置</div>
+    <div id="visitList" class="visit-list"></div>
+
+    <label>备注</label>
+    <textarea id="editNote"></textarea>
+
+    <div class="row">
+      <button type="button" id="saveBtn">保存修改</button>
+      <button type="button" id="cancelBtn" class="danger">取消预约</button>
+      <button type="button" id="backBtn" class="ghost">返回查找页</button>
+    </div>
+
+    <div id="message" class="message"></div>
+  </div>
+
+  <script>
+    var currentReservationNumber = "";
+    var TIME_OPTIONS = [
+      "上午 9:00-12:00",
+      "下午 13:00-17:00",
+      "晚上 18:00-21:00"
+    ];
+    var selectedVisits = [];
+
+    function showMessage(text, type) {
+      var box = document.getElementById("message");
+      box.className = "message " + (type === "ok" ? "ok" : "err");
+      box.textContent = text;
+      box.style.display = "block";
+    }
+
+    function getTodayISO() {
+      var today = new Date();
+      var yyyy = today.getFullYear();
+      var m = today.getMonth() + 1;
+      var mm = (m < 10 ? "0" : "") + m;
+      var d = today.getDate();
+      var dd = (d < 10 ? "0" : "") + d;
+      return yyyy + "-" + mm + "-" + dd;
+    }
+
+    function setDateMin() {
+      var todayISO = getTodayISO();
+      document.getElementById("date").min = todayISO;
+      document.getElementById("startDate").min = todayISO;
+      document.getElementById("endDate").min = todayISO;
+    }
+
+    function onBookingModeChange() {
+      var mode = document.getElementById("bookingMode").value;
+      document.getElementById("separateDateSection").style.display = mode === "range" ? "none" : "block";
+      document.getElementById("rangeDateSection").style.display = mode === "range" ? "block" : "none";
+    }
+
+    function renderVisitList() {
+      var visitList = document.getElementById("visitList");
+      visitList.innerHTML = "";
+
+      if (!selectedVisits || selectedVisits.length === 0) return;
+
+      selectedVisits.forEach(function(visit) {
+        var row = document.createElement("div");
+        row.className = "visit-row";
+
+        var dateLabel = document.createElement("span");
+        dateLabel.className = "visit-date";
+        dateLabel.textContent = visit.date;
+
+        var timeSelect = document.createElement("select");
+        timeSelect.innerHTML = '<option value="">-- 请选择上门时间 --</option>';
+        TIME_OPTIONS.forEach(function(timeText) {
+          var option = document.createElement("option");
+          option.value = timeText;
+          option.textContent = timeText;
+          if (visit.time === timeText) option.selected = true;
+          timeSelect.appendChild(option);
+        });
+        timeSelect.onchange = (function(currentVisitDate) {
+          return function(event) {
+            updateVisitTime(currentVisitDate, event.target.value);
+          };
+        })(visit.date);
+
+        var removeBtn = document.createElement("button");
+        removeBtn.type = "button";
+        removeBtn.className = "small-btn danger-btn";
+        removeBtn.textContent = "删除";
+        removeBtn.onclick = (function(currentVisitDate) {
+          return function() {
+            removeVisitDate(currentVisitDate);
+          };
+        })(visit.date);
+
+        row.appendChild(dateLabel);
+        row.appendChild(timeSelect);
+        row.appendChild(removeBtn);
+        visitList.appendChild(row);
+      });
+    }
+
+    function updateVisitTime(dateValue, timeValue) {
+      selectedVisits = selectedVisits.map(function(visit) {
+        if (visit.date === dateValue) return { date: visit.date, time: timeValue };
+        return visit;
+      });
+    }
+
+    function addVisitDate(dateValue) {
+      if (selectedVisits.some(function(visit) { return visit.date === dateValue; })) {
+        showMessage("该日期已添加", "err");
+        return false;
+      }
+      if (dateValue < getTodayISO()) {
+        showMessage("服务日期不能是过去的日期", "err");
+        return false;
+      }
+      selectedVisits.push({ date: dateValue, time: "" });
+      selectedVisits.sort(function(a, b) { return a.date.localeCompare(b.date); });
+      renderVisitList();
+      return true;
+    }
+
+    function addSingleDate() {
+      var input = document.getElementById("date");
+      var dateValue = input.value;
+      if (!dateValue) {
+        showMessage("请先选择一个日期", "err");
+        return;
+      }
+      if (!addVisitDate(dateValue)) return;
+      input.value = "";
+      showMessage("日期已添加，请为该日期选择时间", "ok");
+    }
+
+    function addDateRange() {
+      var startDate = document.getElementById("startDate").value;
+      var endDate = document.getElementById("endDate").value;
+
+      if (!startDate || !endDate) {
+        showMessage("请先选择开始和结束日期", "err");
+        return;
+      }
+      if (startDate < getTodayISO() || endDate < getTodayISO()) {
+        showMessage("开始和结束日期都不能是过去日期", "err");
+        return;
+      }
+      if (endDate < startDate) {
+        showMessage("结束日期不能早于开始日期", "err");
+        return;
+      }
+
+      var nextDateArray = [];
+      var startParts = startDate.split("-");
+      var endParts = endDate.split("-");
+      var current = new Date(parseInt(startParts[0], 10), parseInt(startParts[1], 10) - 1, parseInt(startParts[2], 10));
+      var end = new Date(parseInt(endParts[0], 10), parseInt(endParts[1], 10) - 1, parseInt(endParts[2], 10));
+
+      while (current <= end) {
+        var yyyy = current.getFullYear();
+        var m = current.getMonth() + 1;
+        var mm = (m < 10 ? "0" : "") + m;
+        var d = current.getDate();
+        var dd = (d < 10 ? "0" : "") + d;
+        nextDateArray.push(yyyy + "-" + mm + "-" + dd);
+        current.setDate(current.getDate() + 1);
+      }
+
+      var visitMap = {};
+      selectedVisits.forEach(function(visit) {
+        visitMap[visit.date] = visit;
+      });
+
+      var nextVisits = [];
+      var addedCount = 0;
+      nextDateArray.forEach(function(dateValue) {
+        if (visitMap.hasOwnProperty(dateValue)) {
+          nextVisits.push(visitMap[dateValue]);
+        } else {
+          nextVisits.push({ date: dateValue, time: "" });
+          addedCount += 1;
+        }
+      });
+
+      selectedVisits = nextVisits;
+      renderVisitList();
+      showMessage(addedCount > 0 ? "区间已更新，请为新增日期选择时间" : "区间已更新，已保留原时间", "ok");
+    }
+
+    function removeVisitDate(dateValue) {
+      selectedVisits = selectedVisits.filter(function(visit) {
+        return visit.date !== dateValue;
+      });
+      renderVisitList();
+    }
+
+    function normalizeVisitsFromData(data) {
+      var fromVisits = Array.isArray(data.visits)
+        ? data.visits
+            .filter(function(item) { return item && item.date; })
+            .map(function(item) {
+              return {
+                date: String(item.date).trim(),
+                time: item.time ? String(item.time).trim() : ""
+              };
+            })
+        : [];
+
+      if (fromVisits.length > 0) return fromVisits;
+
+      if (Array.isArray(data.dates) && data.dates.length > 0) {
+        var defaultTime = "";
+        if (data.time && typeof data.time === "string") {
+          var parts = data.time.split("；");
+          if (parts.length === 1 && parts[0].indexOf(" ") > 0) {
+            defaultTime = parts[0].slice(parts[0].indexOf(" ") + 1).trim();
+          }
+        }
+        return data.dates.map(function(dateItem) {
+          return { date: String(dateItem).trim(), time: defaultTime };
+        });
+      }
+
+      if (data.date) {
+        return [{ date: String(data.date).trim(), time: "" }];
+      }
+
+      return [];
+    }
+
+    function validateUpdateForm() {
+      var ownerName = (document.getElementById("editOwnerName").value || "").trim();
+      var contact = (document.getElementById("editContact").value || "").trim();
+      var catName = (document.getElementById("editCatName").value || "").trim();
+      var catAge = (document.getElementById("editCatAge").value || "").trim();
+      var address = (document.getElementById("editAddress").value || "").trim();
+
+      if (!ownerName) return "客户姓名不能为空";
+      if (!contact) return "联系方式不能为空";
+      if (!address) return "上门地址不能为空";
+      if (!catName) return "猫咪名字不能为空";
+      if (!catAge) return "猫咪年龄不能为空";
+      if (!selectedVisits || selectedVisits.length === 0) return "请至少添加一个服务日期";
+
+      var dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+      var todayISO = getTodayISO();
+      for (var i = 0; i < selectedVisits.length; i++) {
+        var visit = selectedVisits[i];
+        if (!dateRegex.test(visit.date)) return "日期格式错误";
+        if (visit.date < todayISO) return "服务日期不能是过去的日期";
+        if (!visit.time) return "请为日期 " + visit.date + " 选择上门时间";
+      }
+
+      return "";
+    }
+
+    function requestJson(url, method, body, success, failure) {
+      if (typeof fetch !== "undefined") {
+        fetch(url, {
+          method: method,
+          headers: { "Content-Type": "application/json" },
+          body: body ? JSON.stringify(body) : undefined,
+          cache: "no-store"
+        })
+          .then(function(res) { return res.json(); })
+          .then(success)
+          .catch(function() { failure("网络错误，请重试"); });
+      } else {
+        var xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function() {
+          if (xhr.readyState === 4) {
+            try {
+              success(JSON.parse(xhr.responseText || "{}"));
+            } catch (e) {
+              failure("网络错误，请重试");
+            }
+          }
+        };
+        xhr.onerror = function() { failure("网络错误，请重试"); };
+        xhr.open(method, url);
+        xhr.setRequestHeader("Content-Type", "application/json");
+        xhr.send(body ? JSON.stringify(body) : null);
+      }
+    }
+
+    function getReservationNumberFromQuery() {
+      var search = window.location.search || "";
+      var params = search.replace(/^\?/, "").split("&");
+      for (var i = 0; i < params.length; i++) {
+        var pair = params[i].split("=");
+        if ((pair[0] || "") === "reservationNumber") {
+          return decodeURIComponent(pair[1] || "").trim();
+        }
+      }
+      return "";
+    }
+
+    function renderEditor(data) {
+      currentReservationNumber = data.reservationNumber || "";
+      document.getElementById("editReservationNumber").value = data.reservationNumber || "";
+      document.getElementById("editOwnerName").value = data.ownerName || "";
+      document.getElementById("editContact").value = data.contact || "";
+      document.getElementById("editCatName").value = data.catName || "";
+      document.getElementById("editCatAge").value = data.catAge || "";
+      document.getElementById("editAddress").value = data.address || "";
+      document.getElementById("editNote").value = data.note || "";
+
+       selectedVisits = normalizeVisitsFromData(data);
+       selectedVisits.sort(function(a, b) { return a.date.localeCompare(b.date); });
+       renderVisitList();
+    }
+
+    function loadDetail() {
+      var no = getReservationNumberFromQuery();
+      if (!no) {
+        showMessage("缺少预约号，请先返回查找页", "err");
+        return;
+      }
+
+      requestJson(
+        "/api/customer/appointment/" + encodeURIComponent(no) + "?t=" + Date.now(),
+        "GET",
+        null,
+        function(result) {
+          if (!result || !result.success || !result.data) {
+            showMessage((result && result.message) || "未找到预约", "err");
+            return;
+          }
+          renderEditor(result.data);
+        },
+        function(msg) { showMessage(msg, "err"); }
+      );
+    }
+
+    function saveUpdate() {
+      if (!currentReservationNumber) {
+        showMessage("请先加载预约信息", "err");
+        return;
+      }
+
+      var validationError = validateUpdateForm();
+      if (validationError) {
+        showMessage(validationError, "err");
+        return;
+      }
+
+      var dateList = selectedVisits.map(function(item) { return item.date; });
+      var timeText = selectedVisits.map(function(item) { return item.date + " " + item.time; }).join("；");
+
+      var payload = {
+        ownerName: (document.getElementById("editOwnerName").value || "").trim(),
+        contact: (document.getElementById("editContact").value || "").trim(),
+        catName: (document.getElementById("editCatName").value || "").trim(),
+        catAge: (document.getElementById("editCatAge").value || "").trim(),
+        address: (document.getElementById("editAddress").value || "").trim(),
+        note: (document.getElementById("editNote").value || "").trim(),
+        date: dateList[0],
+        dates: dateList,
+        visits: selectedVisits,
+        time: timeText
+      };
+
+      requestJson(
+        "/api/customer/appointment/" + encodeURIComponent(currentReservationNumber) + "?t=" + Date.now(),
+        "PUT",
+        payload,
+        function(result) {
+          if (!result || !result.success || !result.data) {
+            showMessage((result && result.message) || "保存失败", "err");
+            return;
+          }
+          renderEditor(result.data);
+          alert("修改成功");
+          window.location.href = "/manage-appointment.html";
+        },
+        function(msg) { showMessage(msg, "err"); }
+      );
+    }
+
+    function cancelAppointment() {
+      if (!currentReservationNumber) {
+        showMessage("请先加载预约信息", "err");
+        return;
+      }
+
+      if (!window.confirm("确认取消该预约吗？取消后不可恢复。")) return;
+
+      requestJson(
+        "/api/customer/appointment/" + encodeURIComponent(currentReservationNumber) + "/cancel?t=" + Date.now(),
+        "POST",
+        {},
+        function(result) {
+          if (!result || !result.success) {
+            showMessage((result && result.message) || "取消失败", "err");
+            return;
+          }
+          alert("预约已取消");
+          showMessage("预约已取消", "ok");
+        },
+        function(msg) { showMessage(msg, "err"); }
+      );
+    }
+
+    document.getElementById("saveBtn").onclick = saveUpdate;
+    document.getElementById("cancelBtn").onclick = cancelAppointment;
+    document.getElementById("addSingleDateBtn").onclick = addSingleDate;
+    document.getElementById("addDateRangeBtn").onclick = addDateRange;
+    document.getElementById("backBtn").onclick = function() {
+      window.location.href = "/manage-appointment.html";
+    };
+
+    document.getElementById("date").addEventListener("change", function() {
+      if (this.value && this.value < getTodayISO()) {
+        showMessage("服务日期不能是过去的日期，请重新选择", "err");
+        this.value = "";
+      }
+    }, false);
+
+    document.getElementById("startDate").addEventListener("change", function() {
+      if (this.value && this.value < getTodayISO()) {
+        showMessage("开始日期不能是过去的日期，请重新选择", "err");
+        this.value = "";
+      }
+    }, false);
+
+    document.getElementById("endDate").addEventListener("change", function() {
+      if (this.value && this.value < getTodayISO()) {
+        showMessage("结束日期不能是过去的日期，请重新选择", "err");
+        this.value = "";
+      }
+    }, false);
+
+    setDateMin();
+    onBookingModeChange();
+    loadDetail();
+  </script>
+</body>
+</html>
