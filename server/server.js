@@ -2,6 +2,9 @@ const express = require("express");
 const cors = require("cors");
 const path = require("path");
 const mongoose = require("mongoose");
+const multer = require("multer");
+const sharp = require("sharp");
+const fs = require("fs");
 require("dotenv").config();
 
 const app = express();
@@ -11,6 +14,26 @@ const app = express();
 ======================== */
 app.use(cors());
 app.use(express.json());
+app.use(express.static(path.join(__dirname, "..")));
+app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
+
+// 配置文件上传
+if (!fs.existsSync(path.join(__dirname, "../uploads"))) {
+  fs.mkdirSync(path.join(__dirname, "../uploads"), { recursive: true });
+}
+
+const storage = multer.memoryStorage();
+const upload = multer({
+  storage: storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype === "image/jpeg" || file.mimetype === "image/jpg") {
+      cb(null, true);
+    } else {
+      cb(new Error("仅支持 JPG/JPEG 格式"));
+    }
+  }
+});
 
 /* ========================
    ② 连接 MongoDB Atlas
@@ -59,6 +82,10 @@ const appointmentSchema = new mongoose.Schema({
   ],
   time: String,
   note: String,
+  photoPath: {
+    type: String,
+    default: null
+  },
   reservationNumber: {
     type: String,
     unique: true,
@@ -180,18 +207,56 @@ function requireAdmin(req, res, next) {
 /* ========================
    ④ 接收预约并保存到数据库
 ======================== */
-app.post("/api/appointment", async (req, res) => {
+app.post("/api/appointment", upload.single("photo"), async (req, res) => {
   try {
     console.log("📩 收到新的预约信息：");
     console.log(req.body);
+    console.log("📷 文件：", req.file ? req.file.originalname : "无");
 
     if (mongoose.connection.readyState !== 1) {
       console.error("❌ MongoDB 未连接，当前状态：", mongoose.connection.readyState);
       return res.status(500).json({ success: false, message: "数据库连接失败，请稍后重试" });
     }
 
+    // ===== 处理照片上传 =====
+    let photoPath = null;
+    if (req.file) {
+      try {
+        const filename = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}.jpg`;
+        const filepath = path.join(__dirname, "../uploads", filename);
+        
+        // 用 sharp 压缩和验证图片
+        await sharp(req.file.buffer)
+          .resize(1200, 1200, { fit: "inside", withoutEnlargement: true })
+          .jpeg({ quality: 80 })
+          .toFile(filepath);
+        
+        photoPath = `/uploads/${filename}`;
+        console.log("✅ 照片已保存：", photoPath);
+      } catch (photoErr) {
+        console.error("⚠️ 照片处理失败：", photoErr.message);
+        return res.status(400).json({ success: false, message: "照片处理失败：" + photoErr.message });
+      }
+    }
+
     // ===== 后端验证 =====
-    const { ownerName, contactType, contact, address, catName, catAge, date, dates, visits, time, note } = req.body;
+    let { ownerName, contactType, contact, address, catName, catAge, date, dates, visits, time, note } = req.body;
+
+    // 处理FormData中被字符串化的JSON数据
+    if (typeof dates === "string") {
+      try {
+        dates = JSON.parse(dates);
+      } catch (e) {
+        console.warn("dates 解析失败，保持为字符串");
+      }
+    }
+    if (typeof visits === "string") {
+      try {
+        visits = JSON.parse(visits);
+      } catch (e) {
+        console.warn("visits 解析失败，保持为字符串");
+      }
+    }
 
     // 必填字段验证
     if (!ownerName || !ownerName.trim()) {
@@ -302,6 +367,7 @@ app.post("/api/appointment", async (req, res) => {
       visits: normalizedVisits,
       time: normalizedVisits.map((item) => `${item.date} ${item.time}`).join("；"),
       note: note ? note.trim() : "",
+      photoPath: photoPath,
       reservationNumber: reservationNumber,
       status: "active",
       customerAction: "created",
